@@ -236,16 +236,18 @@ if __name__ == '__main__':
                         res[dayhash] = {}
                      if not param   in res[dayhash].keys():
                         res[dayhash][param] = {"values":[],"coefficients":[]}
-   
+                     #print(res)
                      # - Loading forecasted values for user 'userID', city 'city['ID']
                      #   and parameter 'paramID' for day 'day'.
                      #   If there are no data, continue!
                      value = db.get_bet_data('user',userID,city['ID'],paramID,tdate,day)
                      # - If value is False the player did not submit his/her bet!
                      #   Use Petrus fallback.
+                     
+                     #print(value)
                      if not value:
                      	value = db.get_bet_data('user',petrus_userID,city['ID'],paramID,tdate,day)
-
+                     #print(value)
                      # - Still non-numeric (False): save None. This None
                      #   is important as we are using a re-weighting if
                      #   we have, after all, missing values.
@@ -314,6 +316,11 @@ if __name__ == '__main__':
                         final_value = np.int(np.round(final_value/100.)*100)
                      else:
                         final_value = np.int(np.round(final_value))
+                     
+                     #NEW +++ TEST!
+                     #if RR < 0 bring but not -3.0 it to the correct value for "dry weather"
+                     if param == 'RR' and final_value < 0. and final_value != -30.:
+                     	final_value = -30.
 
                      # Iv Wv/Wv: if final_value < 4: set to o
                      if param in ['Wv','Wn'] and final_value > 0. and final_value < 40.:

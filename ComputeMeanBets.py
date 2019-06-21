@@ -74,7 +74,8 @@ if __name__ == '__main__':
    for group in active_groups:
 
       # Do NOT compute mitteltips for these guys
-      if group in ["Automaten","Referenztipps"] : continue
+      if group in ["Automaten","Referenztipps","MOS"] : continue
+      #TODO if we just deactivate them in the admin interface, does it do the job as well?
 
       # - Each group has its own user which is
       #   GRP_<grupname>. Check if exists or create.

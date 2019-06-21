@@ -82,9 +82,10 @@ if __name__ == '__main__':
       print '\n  * Compute the %s for city %s (ID: %d)' % (username,city['name'], city['ID']) 
    
       # - Returns list object containing two dicts 
-      #   where all the bets are in.
-      bet = mitteltip.mitteltip(db,'all',False,city,tdate)
- 
+      #   where all human bets are in.
+      #bet = mitteltip.mitteltip(db,'all',False,city,tdate)
+      bet = mitteltip.mitteltip(db,'human',False,city,tdate)
+
       # - If bet is False, continue
       if bet == False: continue
    

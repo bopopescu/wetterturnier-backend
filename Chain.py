@@ -68,20 +68,22 @@ if __name__ == '__main__':
    import subprocess as sub
    if not config['input_alldates']:
       if is_latest_tournament:
-         scripts = ['ComputeMeanBets.py',
-                    'ComputePetrus.py',
+         #TODO: REMOVE old mean tips before rerunning!
+         scripts = ['ComputePetrus.py',
                     'ComputeMoses.py',
-                    'ComputePersistenz.py',
+                    'ComputeMeanBets.py',
+                    'ComputePersistenzen.py',
                     'ComputePoints.py',
                     'ComputeSleepy.py']
       else:
-         scripts = ['ComputeMeanBets.py',
-                    'ComputePetrus.py',
+         scripts = ['ComputePetrus.py',
+                    'ComputeMeanBets.py',
+                    'ComputePersistenzen.py',
                     'ComputePoints.py',
                     'ComputeSleepy.py']
    else:
-      scripts = ['ComputeMeanBets.py',
-                 'ComputePetrus.py',
+      scripts = ['ComputePetrus.py',
+                 'ComputeMeanBets.py',
                  'ComputeMoses.py',
                  'ComputePoints.py',
                  'ComputeSleepy.py']
@@ -103,8 +105,6 @@ if __name__ == '__main__':
       if not p1.returncode == 0:
          for line in err: print '%s\n' % line
          utils.exit('ERROR WHILE RUNNING %s AS SUBPROCESS FOR DATE %d' % (script,config['input_tdate']))
-
-
 
 
 

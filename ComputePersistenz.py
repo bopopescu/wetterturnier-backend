@@ -27,7 +27,7 @@ if __name__ == '__main__':
    from pywetterturnier import database
    
    # - Evaluating input arguments
-   inputs = utils.inputcheck('ComputePetrus')
+   inputs = utils.inputcheck('ComputePersistenz')
    # - Read configuration file
    config = utils.readconfig('config.conf',inputs)
    
@@ -55,7 +55,7 @@ if __name__ == '__main__':
    params = db.get_parameter_names(False)
 
    # ----------------------------------------------------------------
-   # - Prepare the Moses
+   # - Prepare the Persistenz
    # ----------------------------------------------------------------
    username = 'Persistenz'
    db.create_user( username )
@@ -77,13 +77,10 @@ if __name__ == '__main__':
    from datetime import datetime as dt
    for tdate in tdates:
 
-      # - Using obervations the day before for our Persistenz player
+      # - Using obervations of the tournament day for our Persistenz player
       tdate_str = dt.fromtimestamp( tdate * 86400 ).strftime('%a, %Y-%m-%d')
-      bdate_str = dt.fromtimestamp( (tdate-1) * 86400 ).strftime('%a, %Y-%m-%d')
-      bdate     = tdate - 1
 
-      print "  * Tournament date to process now: %s (%d)" % (tdate_str,tdate)
-      print "    Searching for Observations:     %s (%d)" % (bdate_str,bdate)
+      print "    Searching for Observations:     %s (%d)" % (tdate_str,tdate)
 
       # ----------------------------------------------------------------
       # - Check if we are allowed to perform the computation of the
@@ -103,8 +100,7 @@ if __name__ == '__main__':
          print '\n  * Compute the %s for city %s (ID: %d)' % (username,city['name'], city['ID']) 
 
          # -------------------------------------------------------------
-         # - Looping over all parameters, search for Moses coefficients
-         #   and try to find the bets of the users.
+         # - Looping over all parameters, searching for obs data
          # -------------------------------------------------------------
          for param in params:
 
@@ -124,7 +120,7 @@ if __name__ == '__main__':
                   continue
 
                # - The results dict, needed later
-               val = db.get_obs_data(city['ID'],paramID,tdate,-1,stn.wmo)
+               val = db.get_obs_data(city['ID'],paramID,tdate,0,stn.wmo)
                if isinstance(val,bool): continue
 
                res[param].append( val )
@@ -148,6 +144,7 @@ if __name__ == '__main__':
          # -------------------------------------------------------------
          # - Inserting into database now
          # -------------------------------------------------------------
+         #TODO: DRY! Implement wirh mitteltip.py function
          import numpy as np
          print '    Inserting data into database now'
          bet = {}
@@ -262,7 +259,7 @@ if __name__ == '__main__':
 
 
          # - Save into database. Note: we have loaded the persistence
-         #   dat from day -1 (e.g., thuesday if tournament is friday)
+         #   data from the tournament (e.g. Friday)
          #   but have to store for two days (saturday, sunday). Therefore
          #   there is the day-loop here.
          for day in range(1,3):

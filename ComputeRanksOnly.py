@@ -25,7 +25,7 @@ if __name__ == '__main__':
    from pywetterturnier import database
    
    # - Evaluating input arguments
-   inputs = utils.inputcheck('ComputePoints')
+   inputs = utils.inputcheck('ComputeRanksOnly')
    # - Read configuration file
    config = utils.readconfig('config.conf',inputs)
 
