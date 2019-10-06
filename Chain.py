@@ -63,7 +63,8 @@ if __name__ == '__main__':
       config['input_user'] = db.get_user_id( config['input_user'] )
       if not config['input_user']:
          utils.exit('SORRY could not convert your input -u/--user to corresponding userID. Check name.')
-   
+
+
    # - Compute the Points for all the dudes first
    import subprocess as sub
    if not config['input_alldates']:

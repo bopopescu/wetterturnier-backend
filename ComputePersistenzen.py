@@ -22,9 +22,7 @@ if __name__ == '__main__':
    import numpy as np
    from glob import glob
    # - Wetterturnier specific methods
-   from pywetterturnier import utils
-   from pywetterturnier import database
-   from pywetterturnier import mitteltip
+   from pywetterturnier import utils, database, mitteltip
    
    # - Evaluating input arguments
    inputs = utils.inputcheck('ComputePersistenzen')
@@ -51,9 +49,6 @@ if __name__ == '__main__':
          if elem['name'] == config['input_city']: tmp.append( elem )
       cities = tmp
 
-   # - Reading parameter list
-   params = db.get_parameter_names(False)
-   
 
    for i,j in zip( ["Donnerstag","Freitag"], [1,0] ):
       print i, j

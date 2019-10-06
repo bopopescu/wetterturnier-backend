@@ -73,13 +73,13 @@ if __name__ == '__main__':
    # - Create new user
    for group in active_groups:
 
-      # Do NOT compute mitteltips for these guys
-      if group in ["Automaten","Referenztipps","MOS"] : continue
-      #TODO if we just deactivate them in the admin interface, does it do the job as well?
-
+      group_name = group
+      # Do NOT compute mitteltips for this Guy
+      if group == "Referenztipps" : continue
+      elif group == "Automaten": group_name = "MOS"
       # - Each group has its own user which is
       #   GRP_<grupname>. Check if exists or create.
-      username = 'GRP_%s' % group
+      username = 'GRP_%s' % group_name
       db.create_user( username )
       userID = db.get_user_id( username )
       groupID = db.get_group_id( group )
@@ -108,7 +108,9 @@ if __name__ == '__main__':
 
             if len(participants) < 2:
                print "[!] Less than 2 participants for this group/city/tdate."
-               print "    Skip computation of mean bets."
+               print "    Skip computation of mean bets and delete old bet if exists."
+               group_userID = db.get_user_id( username )
+               db.delete_bet( group_userID, city['ID'], tdate )
                continue
 
             print '    Current tdate is: %d' % tdate
@@ -138,7 +140,16 @@ if __name__ == '__main__':
             # - List element to store the two dict dbects
             #   containing the bets for Petrus
             # -------------------------------------------------------------
-            bet = mitteltip.mitteltip(db,'group',groupID,city,tdate)
+
+            if group in ["MOS-Max", "MOS-Min"]:
+               if group == "MOS-Max":
+                  function = max
+               elif group == "MOS-Min":
+                  function = min
+               groupID = db.get_group_id( "Automaten" )
+               bet = mitteltip.statistics(db,'group',groupID,city,tdate,function)
+            else:
+               bet = mitteltip.mitteltip(db,'group',groupID,city,tdate)
    
             # -------------------------------------------------------------
             # - If at least one query returnd no data, mitteltip returns

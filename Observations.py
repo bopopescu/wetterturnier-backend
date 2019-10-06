@@ -35,7 +35,7 @@ if __name__ == '__main__':
 
    # - Reading WMO WW conversion file
    wmoww = utils.wmowwConversion( "wmo_ww.conf" )
-   #wmoww.show()
+   wmoww.show()
 
    # - Initializing class and open database connection
    db        = database.database(config)
@@ -49,7 +49,7 @@ if __name__ == '__main__':
       tdates     = [config['input_tdate']]
 
    # - Loading all parameters
-   params = db.get_parameter_names(False)
+   params = db.get_parameter_names()
 
    # ----------------------------------------------------------------
    # - Because of the observations we have to compute the

@@ -17,6 +17,8 @@ Documentation for this module.
 More details should be added.
 """
 
+import numpy as np
+
 # -------------------------------------------------------------------
 # - Prevent the script to execute some of the routines on certain
 #   tournament days. 
@@ -33,7 +35,7 @@ def datelock(config,tdate):
 
    Return:
       bool: Returns True if you are allowed to execute the
-      computation and false otherwise."""
+      comoputation and false otherwise."""
 
    return eval("{0:d} {1:s}".format(tdate,config['datelock']))
 
@@ -56,17 +58,16 @@ def inputcheck(what):
       the input argument is not used at all!
    """
 
-   import sys, getopt
-   import database
-   config = readconfig('config.conf')
+   import sys, getopt, database
+   config = readconfig('config.conf')                  
    db        = database.database(config)
-
    # - Evaluating input arguments from the __main__ script.
    try:
       opts, args = getopt.getopt(sys.argv[1:], "c:u:t:p:ahi", ["city=", "user=", "tdate=","param=","alldates","help","ignore"])
    except getopt.GetoptError as err:
       print str(err) # will print something like "option -a not recognized"
       usage(what)
+
 
    inputs = {} # result
    inputs['input_city']      = None
@@ -76,7 +77,7 @@ def inputcheck(what):
    inputs['input_param']     = None 
    inputs['input_ignore']    = False
    inputs['input_force']     = False
-   inputs['input_users']     = None
+   inputs['input_usres']     = None
 
    # - Overwrite the defaults if inputs are set
    for o, a in opts:
@@ -86,13 +87,10 @@ def inputcheck(what):
          inputs['input_alldates']  = True
       elif o in ("-c", "--city"):
          if len(a) <= 2: a = int(a)
-         #print nicename(a)
          cities = db.get_cities()
          print "  * %s active cities" % len(cities)
          found  = False
-         #from unicodedata import normalize
          for i in list(range(len(cities))):
-            #print a.decode('latin-1')
             print cities[i].values()
             if a in cities[i].values():
                inputs['input_city'] = cities[i]['name']
@@ -100,7 +98,7 @@ def inputcheck(what):
             else:
                continue
          if not found:
-	    print 'Your input on -c/--city not recognized.'
+            print 'Your input on -c/--city was not recognized.'
             usage(what)
       elif o in ("-u", "--user"):
          # - Check if is integer (uderID) or string
@@ -120,7 +118,6 @@ def inputcheck(what):
             inputs['input_tdate'] = int( a )
          except:
             print '-t/--tdate input has to be an integer!'; usage(what)
-         #TODO: date input in format YYYYMMDD (tdate2string function)
       else:
          assert False, "unhandled option"
 
@@ -129,6 +126,7 @@ def inputcheck(what):
    if inputs['input_alldates'] and not inputs['input_tdate'] == None:
       import utils
       utils.exit('Input -a/--alldates and -t/--tdate cannot be combined!')
+
 
    return inputs
 
@@ -142,27 +140,24 @@ def usage(what=None):
    Args:
       what (:obj:`str`): String to specify which usage should be used.
 
-   .. todo:: A bug! Change inputcheck, add proper usage.
+   .. todo:: A bug! Change iputcheck, add propper usage.
    """
 
-   import utils
-   import sys, getopt
-   import database
+   import utils, sys, getobs, database
    config = readconfig('config.conf')
-   db     = database.database(config)
-
-   cities = db.get_cities()
-   IDs, names, hashes = [],[],[]
-   for i in list(range(len(cities))):
-      IDs.append(cities[i]['ID'])
-      names.append(cities[i]['name'])
+   db     = database.database(config)                
+   cities = db.get_cities()                             
+   IDs, names, hashes = [],[],[]                        
+   for i in list(range(len(cities))):                      
+      IDs.append(cities[i]['ID'])                          
+      names.append(cities[i]['name'])                      
       hashes.append(cities[i]['hash'])
 
    if what == None:
       print """
       Run into the usage from the inputcheck module with None type.
       You should set an explcit 'what' type when calling the usage
-      so that I can give you a proper exit statement and some
+      so that I can give you a propper exit statement and some
       explanation which input options are allowed.
       """
    else:
@@ -173,21 +168,18 @@ def usage(what=None):
       -u/--user:     A userID or a user_login name. Most 
                      script accept this and compute the points
                      or whatever it is for this user only.
-      -c/--city:     City can be given by its ID, name or hash
-                     IDs:
-                     %s
-                     names:
-                     %s
-                     hashes:
-                     %s
+      -c/--city:     City can be given by its ID, nam
+e or hash
+                     IDs:                                                 %s
+                     names:                                               %s                                                   hashes:                                              %s
       -a/--alldates  Cannot be combined with the -t/--tdate option.
                      If set loop over all available dates. 
       -t/--tdate:    Tournament date in days since 1970-01-01
       -a/--alldates: ignores -t input. Takes all tournament dates
                      from the database to compute the points.
       -f/--force:    Please DO NOT USE. This was for testing
-                     purposes to bypass some securety features
-                     of the scripts!!!! But these security
+                     purpuses to bypass some securety features
+                     of the scripts!!!! But these securety
                      features are there for some reason. So
                      please do not use.
       """ % (what, IDs, names, hashes)
@@ -476,11 +468,28 @@ class wmowwConversion( object ):
                 else:
                     print " - {0:<50s}: {1:3d} gets None".format(values["name"],int(key))
 
+#   Helper function which creates a timestamp from a datetime object
+def timestamp( dt ):
+    "Return POSIX timestamp from datetime object as float"
+    import time as t
+    return t.mktime( dt.timetuple() )
+
+
+def datetime2tdate( datetime ):
+    "Convert datetime object to tdate"
+    return np.floor( timestamp( datetime ) / 86400 )
+
+
+def tdate2datetime( tdate ):
+    "Convert tdate to datetime object"
+    from datetime import datetime as dt
+    return dt.fromtimestamp( tdate * 86400 )
+
 # -------------------------------------------------------------------
 # - Convert date since 1970-01-01 into a readable string 
 # -------------------------------------------------------------------
-def tdate2string( date ):
-   """ Converts tdate into string of form YYY-MM-DD.
+def tdate2string( tdate ):
+   """ Converts tdate into string of form YYYY-MM-DD.
    Note: a so called tdate is nothing else than an integer value
    indicating the days since 1970-01-01 which is used extensively
    in the wetterturnier (especially to optimize the databases).
@@ -491,12 +500,32 @@ def tdate2string( date ):
    Returns:
       string: Formatted string, format ``%Y-%m-%d``.
    """
+   return tdate2datetime( tdate ).strftime( "%Y-%m-%d" )
 
-   from datetime import datetime as dt
 
-   return dt.fromtimestamp( date*86400 ).strftime('%Y-%m-%d')
+def string2tdate( datestring ):
+    "opposite of the above function"
+    from datetime import datetime as dt
+    year  = int(datestring[0:4])
+    mon   = int(datestring[5:7])
+    day   = int(datestring[8:10])
+    dtobj = dt(year, mon, day)
+    return int( timestamp2tdate( timestamp( dtobj ) ) )
 
-#TODO def string2date():
+
+def timestamp2tdate( timestamp ):
+    return int( timestamp / 86400 )
+
+
+def tdate2timestamp( tdate ):
+    return tdate * 86400
+
+
+def today_tdate():
+    "Returns the current date as tdate"
+    from datetime import datetime as dt
+    return timestamp2tdate( timestamp( dt.utcnow() ) )
+    #today = int( dt.datetime.now().strftime('%s') / 86400 )
 
 # -------------------------------------------------------------------
 # - Manipulate special characters to get propper names 

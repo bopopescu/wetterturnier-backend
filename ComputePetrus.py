@@ -20,9 +20,7 @@ if __name__ == '__main__':
    import sys, os
    import numpy as np
    # - Wetterturnier specific modules
-   from pywetterturnier import utils
-   from pywetterturnier import database
-   from pywetterturnier import mitteltip 
+   from pywetterturnier import utils, database, mitteltip 
 
    # - Evaluating input arguments
    inputs = utils.inputcheck('ComputePetrus')
@@ -35,7 +33,7 @@ if __name__ == '__main__':
       print '[!] NOTE: got input -u/--user. Will be ignored in ComputePetrus.'
       config['input_user'] = None
    
-   
+    
    # - Initializing class and open database connection
    db        = database.database(config)
    # - Loading tdate (day since 1970-01-01) for the tournament.
@@ -78,25 +76,30 @@ if __name__ == '__main__':
    # - Compute its mitteltip, one for each station. 
    # ----------------------------------------------------------------
    for city in cities:
+      if config['input_alldates']:
+         tdates = db.all_tournament_dates( city['ID'] )
+         print 'ALL DATES'
+      else:
+         tdates = [tdate]
+      for tdate in tdates:
+         print '\n  * Compute the %s for city %s (ID: %d)' % (username,city['name'], city['ID']) 
    
-      print '\n  * Compute the %s for city %s (ID: %d)' % (username,city['name'], city['ID']) 
-   
-      # - Returns list object containing two dicts 
-      #   where all human bets are in.
-      #bet = mitteltip.mitteltip(db,'all',False,city,tdate)
-      bet = mitteltip.mitteltip(db,'human',False,city,tdate)
+         # - Returns list object containing two dicts 
+         #   where all human bets are in.
+         bet = mitteltip.mitteltip(db,'all',False,city,tdate)
+         # - If bet is False, continue
+         if bet == False: continue
+  
 
-      # - If bet is False, continue
-      if bet == False: continue
-   
-      # -------------------------------------------------------------
-      # - Inserting into database now
-      # -------------------------------------------------------------
-      print '    Inserting data into database now'
-      for day in range(1,3):
-         for k in bet[day-1].keys():
-            paramID = db.get_parameter_id(k)
-            db.upsert_bet_data(userID,city['ID'],paramID,tdate,day,bet[day-1][k])
+         params = db.get_parameter_names(active=True, sort=True)
+         # -------------------------------------------------------------
+         # - Inserting into database now
+         # -------------------------------------------------------------
+         print '    Inserting data into database now'
+         for day in range(1,3):
+            for k in params:
+               paramID = db.get_parameter_id(k)
+               db.upsert_bet_data(userID,city['ID'],paramID,tdate,day,bet[day-1][k])
    
    db.commit()
    db.close()

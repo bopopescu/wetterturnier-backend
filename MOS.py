@@ -50,7 +50,7 @@ else:
 
 cities     = db.get_cities()
 citynames  = db.get_city_names()
-paramnames = db.get_parameter_names(sorted=True)
+paramnames = db.get_parameter_names(sort=True)
 
 
 # - If input city set, then drop all other cities.

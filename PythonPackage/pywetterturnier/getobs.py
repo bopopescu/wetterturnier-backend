@@ -1315,7 +1315,7 @@ class getobs( object ):
             # - If there is no user-change, update
             elif res[0][0] == 0:
                #print "    Update ...."
-               #print( sql_update % (now,self.data[wmo][key],wmo,param[key],betdate) )
+               #print( sql_update % (now,self.data[stn.wmo][key],stn.wmo,param[key],betdate) )
                cur.execute( sql_update % (now,self.data[stn.wmo][key],stn.wmo,param[key],betdate) )
    
 

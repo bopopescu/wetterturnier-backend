@@ -13,7 +13,6 @@
 # -------------------------------------------------------------------
 
 
-
 # - Start as main script (not as module)
 if __name__ == '__main__':
 
@@ -21,9 +20,9 @@ if __name__ == '__main__':
    import numpy as np
    from glob import glob
    # - wetterturnier specific packages
-   from pywetterturnier import utils
-   from pywetterturnier import database
+   from pywetterturnier import utils, database, mitteltip
    from datetime import datetime as dt
+   import numpy as np
    
    # - Evaluating input arguments
    inputs = utils.inputcheck('ComputeMoses')
@@ -56,7 +55,7 @@ if __name__ == '__main__':
                "the necessary coefficient-files for Moses! Stop!")
 
    # - Reading parameter list
-   params = db.get_parameter_names(False)
+   params = db.get_parameter_names(active=True, sort=True)
 
    # ----------------------------------------------------------------
    # - Prepare the Moses
@@ -90,7 +89,6 @@ if __name__ == '__main__':
          print '    %s\n' % 'Cannot find moses coefficients, skip'
          return( False )
 
-      # - Else, ake the newest one
       origin = dt.date(1970,1,1)
       moses_files.sort(reverse=True)
 
@@ -134,221 +132,89 @@ if __name__ == '__main__':
       print "[!] Cannot find \"Petrus\" (User) needed for Moses. Stop script here."
       sys.exit(0)
 
-
    # ----------------------------------------------------------------
-   # - Compute Moses for each tdate 
+   # - Compute Moses for each city 
    # ----------------------------------------------------------------
-   for tdate in tdates:
+   for city in cities:
+      if config['input_alldates']:
+         tdates = db.all_tournament_dates( city['ID'] )
+         print 'ALL DATES'
 
       # -------------------------------------------------------------
-      #  - Looping over cities
+      #  - Looping over tdates
       # -------------------------------------------------------------
-      for city in cities:
-      
-         print '\n  * Compute the %s for city %s (ID: %d)' % (username,city['name'], city['ID']) 
-      
+      for tdate in tdates:
+         bet = [{},{}]
+         print '\n  * Compute the %s for city %s (ID: %d)' % (username, city['name'], city['ID']) 
+         
          # - Searching sutable coefficient file
          #   ... WARNING 200 offset disabled, but we do have a problem
          #       at the moment to get the newest coefficients, so with offset false
          #       we are using old files.
-         moses_file = get_moses_file(tdate,city, offset = False )
+         moses_file = get_moses_file(tdate, city, offset = False )
          if not moses_file: continue
    
-         print '  * Found newest modes file %s' % moses_file
-         mfid = open(moses_file,'r')
-         moses_data = mfid.read().split('\n')
-
-         if config["data_moses_out"]:
-            fid = open("{0:s}/Moses_{1:s}.dat".format(config["data_moses_out"],city["name"]),"w")
-            fid.write( "{0:30s} {1:s}\n".format("Moses coefficients from file",os.path.basename(moses_file)) )
-            fid.write( "{0:30s} {1:s}\n".format("Processed",dt.now().strftime("%Y-%m-%d %H:%M")) )
-            fid.write( "{0:30s} {1:s} ({2:d})\n".format("For city",city["name"],city["ID"]) )
-
-            # Write file 1:1
-            fid.write("\n")
-            fid.write( "\n".join(moses_data) )
-            fid.close()
-
+         print '  * Found newest moses file %s' % moses_file
+         mfid = open(moses_file, 'r')
+         moses_data = iter(mfid.read().split('\n'))
+         moses = {}
+         for param in params: moses[param] = {}
+         for line in moses_data:
+            if line.strip() in params:
+               param=line.strip()
+            elif len(line.split()) == 2:
+               user = line.split()[1]
+               if user == "Persistenz": user = "Donnerstag"
+               moses[param][user] = line.split()[0]
+            else: continue
+         db.upsert_moses_coefs(city['ID'], tdate, moses)
+         moses = db.get_moses_coefs(city['ID'], tdate)
+         print moses
          # -------------------------------------------------------------
          # - Looping over all parameters, search for Moses coefficients
          #   and try to find the bets of the users.
-         # -------------------------------------------------------------
-         # - The results dict, needed later
-         res = {}
          for param in params:
-   
-            print '  - Scanning Moses parameter %s' % param
-            # - Loading parameter ID
-            paramID = db.get_parameter_id( param )
-            param_found = False
-   
-            # - Looping over textfile content and search
-            #   for the correct entries.
-            for line in moses_data:
-   
-               # - Found the line (Beginning of the parameter block)
-               if line.strip() == param:
-                  print '    Found definition for this parameter, read coefficients now'
-                  param_found = True
-                  continue
-   
-               # - If we have not found the coefficient definiton block
-               #   yet, just continue searching for it.
-               if not param_found: continue
-               # - If line is empty we are at the end of the
-               #   Moses parameter coefficient block.
-               if len(line.strip()) == 0: break 
-   
-               # - Here now reading the content of the Moses
-               #   coefficients. We need one coeffcient (float)
-               #   and a username.
-               if param_found:
-   
-                  # - Parse the data from the line
-                  try:
-                     coef = float(line.split(' ')[0])
-                     username = str(line.split(' ')[1])
-                     nicename = utils.nicename( username )
-                  except:
-                     print '[!] Problems interpreting moses line: %s' % line
-                     continue
-   
-                  # - Loading user ID. WARNING: could also be
-                  #   a group. We have to search for both.
-                  userID  = db.get_user_id( nicename )
-                  groupID = db.get_user_id( "GRP_%s" % nicename )
-   
-                  if not userID: userID = groupID
-   
+            paramID = db.get_parameter_id( param )  
+            for day in range(2):
+               bet[day][param] = np.array([])
+               users           = moses[param]
+               for user in users:
+                  if user == "Persistenz": user = "Donnerstag" 
+                  userID  = db.get_user_id( user )
+                  groupID = db.get_user_id( "GRP_%s" % user )
+
+                  if not userID: userID = groupID 
+
                   if not userID:
-                     print '    - Problems getting userID for user %s (%s)' % (nicename,username)
+                     print '    - Problems getting userID for user %s' % (user)
                      utils.exit('Reto, should not happen. What doing now?')
-      
-                  print '    - Moses coeff: %10.5f for userID %4d %s (%s)' % (coef,userID,nicename,username)
-   
-                  # - Loading bet value for bet date 1 and two
-                  print '      | ', 
-                  for day in range(1,3):
-   
-                     # - Initialize results dict for the current day
-                     dayhash = "day_%d" % day
-                     if not dayhash in res.keys():
-                        res[dayhash] = {}
-                     if not param   in res[dayhash].keys():
-                        res[dayhash][param] = {"values":[],"coefficients":[]}
-                     #print(res)
-                     # - Loading forecasted values for user 'userID', city 'city['ID']
+                  
                      #   and parameter 'paramID' for day 'day'.
                      #   If there are no data, continue!
-                     value = db.get_bet_data('user',userID,city['ID'],paramID,tdate,day)
-                     # - If value is False the player did not submit his/her bet!
-                     #   Use Petrus fallback.
-                     
-                     #print(value)
-                     if not value:
-                     	value = db.get_bet_data('user',petrus_userID,city['ID'],paramID,tdate,day)
-                     #print(value)
-                     # - Still non-numeric (False): save None. This None
-                     #   is important as we are using a re-weighting if
-                     #   we have, after all, missing values.
-                     if type(value) == type(bool()):
-                        value = None
-                     else:
-                        value = float(value[0])
-   
-                     # - Append to results dict
-                     res[dayhash][param]["values"].append( value )
-                     res[dayhash][param]["coefficients"].append( coef )
-   
-                     # - Else (if there were data) we have to process them.
-                     #   The final modes is value1*coef1 + value2*coef2 + ...
-                     #   where we have to weight at the end if one of the
-                     #   values was not available. 
-                     if value == None:
-                        print 'day%d %8s, ' % (day,"NONE"),
-                     else:
-                        print 'day%d %8.1f, ' % (day,value),
-   
-                  print ''
-   
-   
-         # - Looping trough the results and start to process the data. 
-         import re
-         bet = {}; tmp = res.keys(); tmp.sort()
-         for dayhash in tmp: 
-   
-            # - If this is a valid day hash
-            if len(re.findall(r"^day_[0-9]",dayhash)) == 1:
-               
-               # - Extracting day as integer
-               tmp = re.search(r".?[0-9]",dayhash)
-               day = int(dayhash[tmp.start()+1:])
-               print "    Found entries for day: %d" % day
-               # - To store the moses bets for this day
-               bet[dayhash] = {}
-   
-               # - Looping trough parameters
-               for param in res[dayhash]:
-   
-                  val  = np.asarray( res[dayhash][param]['values'] )
-                  coef = np.asarray( res[dayhash][param]['coefficients'] )
-   
-                  counter = 0; sum_val = None; sum_coef = None;
-                  for i in range(0,len(val)):
-                     # - If not valid: skip
-                     if val[i] == None: continue
-                     # - If first valid value: set sum_val and sum_coef
-                     if not sum_val and not sum_coef:
-                        sum_val = 0.; sum_coef = 0.
-                     # - Add values to sum
-                     sum_val  += val[i] * coef[i]
-                     sum_coef += coef[i]
-                     counter  += 1
-                     
-                  # - Compute final re-weighted value
-                  if counter > 0:
-                     final_value = sum_val / sum_coef
-   
-                     # - Bring to full tens
-                     if param in ['N','ff','Wv','Wn','fx']:
-                        final_value = np.int(np.round(final_value/10.)*10)
-                     elif param == "dd":
-                        final_value = np.int(np.round(final_value/100.)*100)
-                     else:
-                        final_value = np.int(np.round(final_value))
-                     
-                     #NEW +++ TEST!
-                     #if RR < 0 bring but not -3.0 it to the correct value for "dry weather"
-                     if param == 'RR' and final_value < 0. and final_value != -30.:
-                     	final_value = -30.
+                  value = db.get_bet_data('user',userID,city['ID'],paramID,tdate,day+1)
+                  coef  = moses[param][user]
+                  # - If value is False the player did not submit his/her bet!
+                  
+                  if value == False: continue
+                  else:
+                     bet[day][param] = np.append( bet[day][param], np.repeat( value, int(float(coef)*100000) ) )
+               #   Use Petrus fallback.
+               if len(bet[day][param]) == 0:
+                  bet[day][param] = db.get_bet_data('user',petrus_userID,city['ID'],paramID,tdate,day+1)
+         bet = mitteltip.mitteltip(db,'moses',False,city,tdate,bet)
+         
+         # - If bet is False, continue
+         if bet == False: continue
 
-                     # Iv Wv/Wv: if final_value < 4: set to o
-                     if param in ['Wv','Wn'] and final_value > 0. and final_value < 40.:
-                        print "    Wv/Wn is {0:d} due to equation. Setting bet to 0!".format(
-                                 int(final_value) )
-                        final_value = 0.
-   
-                     print "    Final Moses value for day %d, param %-8s %8d (%d)" % \
-                                 (day,param,final_value,counter)
-                     # - Append result
-                     bet[dayhash][param] = final_value
-   
-   
          # -------------------------------------------------------------
          # - Inserting into database now
          # -------------------------------------------------------------
-         print '  * Inserting data into database now'
+         print '    Inserting data into database now'
          for day in range(1,3):
-            dayhash = "day_%d" % day
-            for param in bet[dayhash].keys():
-               paramID = db.get_parameter_id( param )
-               #print moses_userID,city['ID'],paramID,tdate,day,bet[dayhash][param]
-               db.upsert_bet_data(moses_userID,city['ID'],paramID,tdate,day,bet[dayhash][param])
-   
-
-
-
-
+            for k in params:
+               paramID = db.get_parameter_id(k)
+               db.upsert_bet_data(moses_userID,city['ID'],paramID,tdate,day,bet[day-1][k])
 
    db.commit()
    db.close()
+

@@ -63,10 +63,12 @@ if __name__ == '__main__':
    from datetime import datetime as dt
    scripts = ['ComputeMeanBets.py',
               'ComputePetrus.py',
-              'ComputePersistenz.py',
+              'ComputeMoses.py',
+              'ComputePersistenzen.py',
               'ComputePoints.py',
               'ComputeSumPoints.py',
-              'ComputeSleepy.py']
+              'ComputeSleepy.py'
+              'ComputeStats.py']
 
 
    # - Now calling the other scripts using the necessary
