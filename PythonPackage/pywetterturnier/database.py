@@ -89,7 +89,7 @@ class database(object):
 
       data = cur.fetchall()
       res = []
-      for i in data: res.append( i[0] )
+      for i in data: res.append( int(i[0]) )
 
       return res
 
@@ -723,7 +723,6 @@ class database(object):
          PetrusID = self.get_user_id('Petrus')
          MosesID = self.get_user_id('Moses')
          if typ == 'human':
-            PersistenzID = self.get_user_id('Persistenz')
             DonnerstagID = self.get_user_id('Donnerstag')
             FreitagID    = self.get_user_id('Freitag')
          # - Create statement
@@ -1025,6 +1024,7 @@ class database(object):
       # - Return the id
       return userID
    
+
    # -------------------------------------------------------------------
    # - Returning user ID
    # -------------------------------------------------------------------
@@ -1048,7 +1048,6 @@ class database(object):
             return int(data[0])
 
    
-
    def get_all_users(self,typ="ID"):
       """Returns all user IDs in database
       Args:
@@ -1277,15 +1276,16 @@ class database(object):
       sql = "SELECT points"+day_str+" FROM %swetterturnier_betstat WHERE "
       if tdate:
          # We don't want Sleepy and Referenztipps in our tdatestats!
-         exclude = ["Sleepy"]
-         groupID = self.get_group_id( group )
+         exclude = [self.get_user_id("Sleepy")]
+         groupID = self.get_group_id( "Referenztipps" )
          for i in self.get_participants_in_group( groupID, cityID, tdate, playing=False ):
             exclude.append( i )
          #only include users who really played on tdate (no sleepy points!)
          played = sql_tuple( self.get_participants_in_city( cityID, tdate ) )
 
          sql += "cityID=%d AND tdate=%d AND userID NOT IN%s AND userID IN%s"
-         cur.execute( sql % ( self.prefix, cityID, tdate, tuple(exclude), played) )
+         print sql % ( self.prefix, cityID, tdate, tuple(exclude), played )
+         cur.execute( sql % ( self.prefix, cityID, tdate, tuple(exclude), played ) )
       else:
          # check whether current tournament is finished to keep open tournaments out of the userstats
          today              = utils.today_tdate()
@@ -1429,14 +1429,14 @@ class database(object):
       exclude = sql_tuple(exclude)
 
       sql = "SELECT userID FROM %swetterturnier_bets WHERE cityID=%d AND tdate=%d AND userID NOT IN%s"
-      #print sql % ( self.prefix, cityID, tdate, exclude )
+      print sql % ( self.prefix, cityID, tdate, exclude )
       cur.execute( sql % ( self.prefix, cityID, tdate, exclude ) )
       data = cur.fetchall()
 
       res = []
       for i in data:
          if i[0] not in res:
-            res.append(i[0])
+            res.append( int(i[0]) )
       return res
 
 
