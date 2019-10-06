@@ -1296,16 +1296,15 @@ class database(object):
             last_tdate = current_tnmt - 7
 
          #again only if a user actually participated on tdate we add his points to the stats
-         sql2 = "SELECT tdate FROM %swetterturnier_bets WHERE userID=%d"
-         cur.execute( sql2 % ( self.prefix, userID ) )
+         sql2 = "SELECT tdate FROM %swetterturnier_bets WHERE userID=%d AND cityID=%d"
+         cur.execute( sql2 % ( self.prefix, userID, cityID ) )
          data2 = cur.fetchall()
          tdates = []
          for i in data2:
             if i[0] not in tdates: tdates.append( int(i[0]) )
-         print tdates
 
          sql += "userID=%d AND cityID=%d AND tdate<=%d AND tdate IN%s"
-         print sql % ( self.prefix, userID, cityID, last_tdate, sql_tuple(tdates) )
+         #print sql % ( self.prefix, userID, cityID, last_tdate, sql_tuple(tdates) )
          cur.execute( sql % ( self.prefix, userID, cityID, last_tdate, sql_tuple(tdates) ) )
 
       data = cur.fetchall()
