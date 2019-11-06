@@ -367,7 +367,7 @@ class database(object):
    # -------------------------------------------------------------------
    # - Loading stations from database for a given city
    # -------------------------------------------------------------------
-   def get_stations_for_city(self,cityID,active=True):
+   def get_stations_for_city(self,cityID,active=False,tdate=False):
       """Loading all stations mached to a certain city.
 
       Args:
@@ -378,8 +378,10 @@ class database(object):
       """
 
       sql = "SELECT * FROM %swetterturnier_stations WHERE cityID = %d" % (self.prefix,cityID)
-      if active:
-         sql += " AND active = 1"
+      if active: sql += " AND active = 1"
+      if tdate:
+         tdate = str(tdate)
+         sql += " AND (since <= "+tdate+" OR since = 0) AND (until >= "+tdate+" OR until = 0)"
       cur = self.db.cursor()
       cur.execute( sql )
       desc = cur.description
@@ -388,8 +390,7 @@ class database(object):
       from stationclass import *
       stations = []
 
-      for rec in data:
-         stations.append( stationclass( desc, rec, self.db, self.config["mysql_prefix"] ) )
+      for rec in data: stations.append( stationclass( desc, rec, self.db, self.config["mysql_prefix"] ) )
 
       return stations
 
@@ -1053,7 +1054,7 @@ class database(object):
    # - Returning username corresponding to the ID
    #   More explicitly: return user_login from the database.
    # -------------------------------------------------------------------
-   def get_username_by_id(self,userID):
+   def get_username_by_id(self,userID, which="user_login"):
       """Returns username given a user ID.
       Returns the username for a given user ID. If the user cannot be found,
       the return value will be False. There is a vice versa function called
@@ -1070,7 +1071,7 @@ class database(object):
       except:
          utils.exit('Got wrong input to get_username_by_id. Was no integer!')
       cur = self.db.cursor()
-      cur.execute('SELECT display_name FROM %susers WHERE ID = %d' % (self.prefix, userID))
+      cur.execute('SELECT %s FROM %susers WHERE ID = %d' % ( which, self.prefix, userID ))
       data = cur.fetchone()
       if not data:
          return False
@@ -1437,6 +1438,28 @@ class database(object):
          if i[0] not in res:
             res.append( int(i[0]) )
       return res
+
+
+   def find_missing_obs(self, cityID, tdate=False ):
+      #TODO: if no obs for one parameter (so not at least one value) in a city exists return False
+      """
+      Check whether to many obs are missing for a given city (and tdate) to compute Moses.
+      """
+      if not tdate:
+         tdate = self.current_tournament()
+
+      params = self.get_parameter_names()
+      missing = False
+
+      for param in params:
+         paramID = self.get_parameter_id( param )
+         for day in range(1,3):
+            obs = self.get_obs_data(cityID,paramID,tdate,day)
+            if 
+               print "Obs in city '%s' have to many missing parameters!" % ( self.get_city_name_by_ID( cityID ) )
+               missing = True
+      
+      return missing
 
 
    # find incomplete bets for a given tdate and cityID

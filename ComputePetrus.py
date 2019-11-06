@@ -33,7 +33,7 @@ if __name__ == '__main__':
       print '[!] NOTE: got input -u/--user. Will be ignored in ComputePetrus.'
       config['input_user'] = None
    
-    
+   
    # - Initializing class and open database connection
    db        = database.database(config)
    # - Loading tdate (day since 1970-01-01) for the tournament.
@@ -41,11 +41,11 @@ if __name__ == '__main__':
    #   the bet-dates are for Saturday and Sunday if there was
    #   no input tournament date -t/--tdate.
    if config['input_tdate'] == None:
-      tdate      = db.current_tournament()
+      tdates      = [db.current_tournament()]
    else:
-      tdate      = config['input_tdate']
+      tdates      = [config['input_tdate']]
 
-   print '  * Current tournament is %s' % utils.tdate2string( tdate )
+   print '  * Current tournament is %s' % utils.tdate2string( tdates[0] )
    # - Loading all different cities (active cities)
    cities     = db.get_cities()
    # - If input city set, then drop all other cities.
@@ -54,15 +54,6 @@ if __name__ == '__main__':
       for elem in cities:
          if elem['name'] == config['input_city']: tmp.append( elem )
       cities = tmp
-
-   # ----------------------------------------------------------------
-   # - Check if we are allowed to perform the computation of the
-   #   Petrus bets on this date
-   # ----------------------------------------------------------------
-   check = utils.datelock(config,tdate)
-   if check:
-      print '    Date is \'locked\' (datelock). Dont execute.'
-      import sys; sys.exit(0)
 
 
    # ----------------------------------------------------------------
@@ -76,28 +67,50 @@ if __name__ == '__main__':
    # - Compute its mitteltip, one for each station. 
    # ----------------------------------------------------------------
    for city in cities:
+   
+      print '\n  * Compute the %s for city %s (ID: %d)' % (username,city['name'], city['ID']) 
+
       if config['input_alldates']:
          tdates = db.all_tournament_dates( city['ID'] )
-         print 'ALL DATES'
-      else:
-         tdates = [tdate]
+
+      # ----------------------------------------------------------------
+      # - Looping trough dates
+      # ----------------------------------------------------------------
       for tdate in tdates:
-         print '\n  * Compute the %s for city %s (ID: %d)' % (username,city['name'], city['ID']) 
-   
+
+         # ----------------------------------------------------------------
+         # - Check if we are allowed to perform the computation of the
+         #   mean bets on this date
+         # ----------------------------------------------------------------
+         check = utils.datelock(config,tdate)
+	 if check:
+	    print '    Date is \'locked\' (datelock). Dont execute, skip.'
+	    continue
+
+	 # ----------------------------------------------------------------
+	 # - I do not have the judgingclass before the rule changes in
+	 #   2002 (2002-12-06) and therefore it does not make any sense
+	 #   to compute MeanBets for that time period (becuase we can
+	 #   never compute the corresponding points). Skip. 
+	 # ----------------------------------------------------------------
+	 if tdate < 12027:
+	    print '[!] I dont know the rules to compute points before 2002-12-06'
+	    print '    Therefore it makes no sense to compute MeanBets. Skip.'
+	    continue
+ 
          # - Returns list object containing two dicts 
-         #   where all human bets are in.
+         #   where all the bets are in.
          bet = mitteltip.mitteltip(db,'all',False,city,tdate)
+ 
          # - If bet is False, continue
          if bet == False: continue
-  
-
-         params = db.get_parameter_names(active=True, sort=True)
+   
          # -------------------------------------------------------------
          # - Inserting into database now
          # -------------------------------------------------------------
          print '    Inserting data into database now'
          for day in range(1,3):
-            for k in params:
+            for k in bet[day-1].keys():
                paramID = db.get_parameter_id(k)
                db.upsert_bet_data(userID,city['ID'],paramID,tdate,day,bet[day-1][k])
    
