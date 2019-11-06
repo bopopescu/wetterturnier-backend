@@ -1449,17 +1449,19 @@ class database(object):
          tdate = self.current_tournament()
 
       params = self.get_parameter_names()
-      missing = False
+      missing = []
 
       for param in params:
          paramID = self.get_parameter_id( param )
          for day in range(1,3):
             obs = self.get_obs_data(cityID,paramID,tdate,day)
-            if 
-               print "Obs in city '%s' have to many missing parameters!" % ( self.get_city_name_by_ID( cityID ) )
-               missing = True
+            if type(obs) == bool or len(obs) < 2: 
+               print "Obs in city '%s' have to many missing parameters on tdate %s!" % ( self.get_city_name_by_ID( cityID ), utils.tdate2string( tdate ) )
+               missing.append(tdate)
       
-      return missing
+      if len(missing) == 0:
+         return False
+      else: return True
 
 
    # find incomplete bets for a given tdate and cityID

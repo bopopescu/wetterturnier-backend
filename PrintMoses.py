@@ -54,14 +54,18 @@ def print_moses( db, config, cities, tdates ):
       cityID = city['ID']
       if config['input_alldates']:
          tdates = db.all_tournament_dates( city['ID'] )
+         current = db.current_tournament()
+         if current in tdates:
+            tdates.remove( current )
       for tdate in tdates:
 
-         missing_bets = db.get_missing_bets( tdate, cityID )
-         #missing_obs  = db.get_missing_obs( tdate, cityID )
+         missing_bets = db.find_missing_bets( cityID, tdate )
+         missing_obs  = db.find_missing_obs( cityID, tdate )
+
+         #if *missing_bets returns False, it's a bool, missing obs returns either True or False
+         if type(missing_bets) == bool or missing_obs: continue
 
          #workaround for missing ZUR bets on 3 tdates, dirty
-
-         if missing_bets: continue
          if cityID == 3 and tdate in [15870, 15849, 15898]: continue
 
          stations = db.get_stations_for_city( cityID, active=False, tdate=tdate )
@@ -126,6 +130,7 @@ if __name__ == '__main__':
       tdates     = [db.current_tournament()]
    else:
       tdates     = [config['input_tdate']]
+
 
    # - Loading all different cities (active cities)
    cities     = db.get_cities()
