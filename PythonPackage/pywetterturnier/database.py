@@ -1441,27 +1441,23 @@ class database(object):
 
 
    def find_missing_obs(self, cityID, tdate=False ):
-      #TODO: if no obs for one parameter (so not at least one value) in a city exists return False
       """
-      Check whether to many obs are missing for a given city (and tdate) to compute Moses.
+      Check whether too many obs are missing for a given city (and tdate) to compute Moses.
       """
       if not tdate:
          tdate = self.current_tournament()
 
       params = self.get_parameter_names()
-      missing = []
 
       for param in params:
          paramID = self.get_parameter_id( param )
          for day in range(1,3):
             obs = self.get_obs_data(cityID,paramID,tdate,day)
-            if type(obs) == bool or len(obs) < 2: 
-               print "Obs in city '%s' have to many missing parameters on tdate %s!" % ( self.get_city_name_by_ID( cityID ), utils.tdate2string( tdate ) )
-               missing.append(tdate)
-      
-      if len(missing) == 0:
-         return False
-      else: return True
+            if type(obs) == bool:
+               print "Obs in city '%s' have to many missing parameters on %s (tdate %d)!" % ( self.get_city_name_by_ID(cityID), utils.tdate2string(tdate), tdate )
+               return True
+
+      return False
 
 
    # find incomplete bets for a given tdate and cityID

@@ -57,17 +57,18 @@ def print_moses( db, config, cities, tdates ):
          current = db.current_tournament()
          if current in tdates:
             tdates.remove( current )
+         tdates = [i for i in tdates if i > 12027]
+
       for tdate in tdates:
 
          missing_bets = db.find_missing_bets( cityID, tdate )
          missing_obs  = db.find_missing_obs( cityID, tdate )
 
          #if *missing_bets returns False, it's a bool, missing obs returns either True or False
-         if type(missing_bets) == bool or missing_obs: continue
-
-         #workaround for missing ZUR bets on 3 tdates, dirty
-         if cityID == 3 and tdate in [15870, 15849, 15898]: continue
-
+         if type(missing_bets) != bool or missing_obs:
+            print("To many missing obs or parameters!")
+            continue
+         
          stations = db.get_stations_for_city( cityID, active=False, tdate=tdate )
          #print output to file, first get prober filename
          filename = path + utils.tdate2string( tdate, moses=True )+"."+city['name'].lower()[0]+"pw"
