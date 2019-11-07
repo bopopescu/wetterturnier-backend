@@ -1386,8 +1386,7 @@ class database(object):
          sql = "SELECT userID, coef FROM %swetterturnier_coefs WHERE cityID=%d AND tdate=%d AND paramID=%d"
          cur.execute( sql % ( self.prefix, cityID, tdate, paramID ) ) 
          data = cur.fetchall()
-         #print data
-         #print sql % ( self.prefix, cityID, tdate, paramID )
+         if len(data) == 0: return False
          for i in data:
             #print i[0], i[1]
             user = self.get_username_by_id( i[0] )

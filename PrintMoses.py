@@ -14,6 +14,7 @@
 
 #import python3's print function, back2thefuture!
 from __future__ import print_function
+from pywetterturnier import utils
 
 # -------------------------------------------------------------------
 # - Embedded function. Can be used on its own (called from

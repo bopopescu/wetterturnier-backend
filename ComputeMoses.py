@@ -23,6 +23,7 @@ if __name__ == '__main__':
    from pywetterturnier import utils, database, mitteltip
    from datetime import datetime as dt
    import numpy as np
+   from PrintMoses import print_moses
    
    # - Evaluating input arguments
    inputs = utils.inputcheck('ComputeMoses')
@@ -31,12 +32,27 @@ if __name__ == '__main__':
    
    # - Initializing class and open database connection
    db        = database.database(config)
+
+   # - Loading all different cities (active cities)
+   cities     = db.get_cities()
+
    # - Loading tdate (day since 1970-01-01) for the tournament.
    #   Normaly Friday-Tornament (tdate is then Friday) while
    #   the bet-dates are for Saturday and Sunday if there was
    #   no input tournament date -t/--tdate.
    if config['input_tdate'] == None:
       tdates     = [db.current_tournament()]
+      today      = utils.today_tdate()
+      #if db.get_moses_coefs( 1, tdates[0] ) == False:
+      if today == tdates[0] + 4 and db.get_moses_coefs( 1, tdates[0] ) == False:
+         #it's gotta be Tuesday then. And we only look if coefs for Berlin exists cause we're hackers
+         import numpy
+         import moses as m
+         #execute moses.f90 programm for each cities to keep coefs up to date once a week
+         print_moses( db, config, cities, tdates ) 
+         for c in cities:
+            m.moses.processmoses(c['hash'])
+
    else:
       tdates     = [config['input_tdate']]
 
@@ -118,7 +134,7 @@ if __name__ == '__main__':
           print "    Return 'False', Moses wont be computed!"
           return False
 
-      # Else return file name of the newest file
+      # Else return file name of the newest file, tdate
       return newest_file
 
 
@@ -147,11 +163,13 @@ if __name__ == '__main__':
          bet = [{},{}]
          print '\n  * Compute the %s for city %s (ID: %d)' % (username, city['name'], city['ID']) 
          
-         # - Searching sutable coefficient file
+         # - Searching suitable coefficient file
          #   ... WARNING 200 offset disabled, but we do have a problem
          #       at the moment to get the newest coefficients, so with offset false
          #       we are using old files.
          moses_file = get_moses_file(tdate, city, offset = False )
+         if moses_file: moses_tdate = utils.string2tdate( moses_file[18:-4], moses = True )
+
          if not moses_file: continue
    
          print '  * Found newest moses file %s' % moses_file
@@ -167,7 +185,7 @@ if __name__ == '__main__':
                if user == "Persistenz": user = "Donnerstag"
                moses[param][user] = line.split()[0]
             else: continue
-         db.upsert_moses_coefs(city['ID'], tdate, moses)
+         db.upsert_moses_coefs(city['ID'], moses_tdate, moses)
          moses = db.get_moses_coefs(city['ID'], tdate)
          print moses
          # -------------------------------------------------------------

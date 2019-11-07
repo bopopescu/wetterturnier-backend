@@ -505,12 +505,19 @@ def tdate2string( tdate, moses=False ):
    return tdate2datetime( tdate ).strftime( fmt )
 
 
-def string2tdate( datestring ):
+def string2tdate( datestring, moses=False ):
     "opposite of the above function"
     from datetime import datetime as dt
-    year  = int(datestring[0:4])
-    mon   = int(datestring[5:7])
-    day   = int(datestring[8:10])
+
+    if moses: #mosesYYMMDD
+       year = int(datestring[0:2])
+       mon  = int(datestring[2:4])
+       day  = int(datestring[4:6])
+    else:
+       year  = int(datestring[0:4])
+       mon   = int(datestring[5:7])
+       day   = int(datestring[8:10])
+
     dtobj = dt(year, mon, day)
     return int( timestamp2tdate( timestamp( dtobj ) ) )
 
