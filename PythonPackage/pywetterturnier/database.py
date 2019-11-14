@@ -1155,10 +1155,10 @@ class database(object):
          return int(data[0])
 
 
-   def get_users_in_group(self, groupID, group=None, active=True, sort=False):
+   def get_users_in_group(self, groupID=None, group=None, active=True, sort=False):
       #group == str, groupID == int
       if group:
-         return self.db.get_users_in_group( groupID = self.db.get_group_id(group) )
+         return self.get_users_in_group( groupID = self.get_group_id(group) )
       else:
          cur = self.db.cursor()
          sql = 'SELECT userID FROM %swetterturnier_groupusers WHERE groupID = %d'
@@ -1186,7 +1186,7 @@ class database(object):
          group (:obj:`str`):      Group name.
          since (:obj:`datetime`): Usually current time. Add user to a group.
                                   the user was a member of the group.
-         active (:obj:`id`):      If user is an actie member of the group or not.
+         active (:obj:`id`):      If user is an active member of the group or not.
                                   Typically 1 as you are adding the user in that split second.
       """
    
@@ -1235,8 +1235,8 @@ class database(object):
       Args:
          cityID (:obj:`int`): Numeric city ID.
          tdate (:obj:`int`):  Tournament date, days since 1970-01-01.
-         ignore (:obj:`int`): Numeric user ID, ID of the user which should
-                              be ignored (e.g., Sleepy's ID).
+         ignore (:obj:`tuple`): tuple of userIDs, IDs of the users which should
+                              be ignored (e.g., Sleepy's ID or Persistencies).
       Returns:
          tuple tuple: Tuple tuple as fetched from database. Typically including
          two tuples, first for Saturday, second for Sunday.
@@ -1246,7 +1246,7 @@ class database(object):
       sql = 'SELECT b.points AS points ' + \
             'FROM %swetterturnier_betstat AS b LEFT OUTER JOIN %susers AS u ' + \
             'ON b.userID = u.ID ' + \
-            'WHERE cityID = %d AND tdate = %d AND userID != %d ' + \
+            'WHERE cityID = %d AND tdate = %d AND userID NOT IN%s ' + \
             'AND NOT b.points IS NULL'
       cur.execute( sql % ( self.prefix, self.prefix,cityID,tdate,ignore) )
       data = cur.fetchall()
