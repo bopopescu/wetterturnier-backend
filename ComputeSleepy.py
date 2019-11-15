@@ -78,7 +78,7 @@ if __name__ == '__main__':
    groups = db.get_groups()
    for group in groups:
       ignore.append( db.get_user_id( "GRP_" + group ) )
-   
+   print ignore 
 
    # ----------------------------------------------------------------
    # - Compute its sleepy, one for each city 
