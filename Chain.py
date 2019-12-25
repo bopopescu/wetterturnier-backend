@@ -71,7 +71,7 @@ if __name__ == '__main__':
       if is_latest_tournament:
          #TODO: REMOVE old mean tips before rerunning!
          scripts = ['ComputePetrus.py',
-                    'ComputeMoses.py',
+#                    'ComputeMoses.py',
                     'ComputeMeanBets.py',
                     'ComputePersistenzen.py',
                     'ComputePoints.py',
@@ -85,7 +85,7 @@ if __name__ == '__main__':
    else:
       scripts = ['ComputePetrus.py',
                  'ComputeMeanBets.py',
-                 'ComputeMoses.py',
+ #                'ComputeMoses.py',
                  'ComputePoints.py',
                  'ComputeSleepy.py']
 

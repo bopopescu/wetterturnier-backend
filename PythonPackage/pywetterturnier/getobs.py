@@ -17,13 +17,14 @@ import datetime as dt
 import numpy as np
 
 class getobs( object ):
-   """Main observation handling class. Loading observations from the
+   """
+   Main observation handling class. Loading observations from the
    'raw' database (Obsdatabase) and computes the observations required
    for the tournament (e.g, daily sunshine duration or precipitation sums
    (sum over 24h between pre-specified times).
    These values are stored into the `Wetterturnier Wordpress Plugin <https://github.com/retostauffer/wp-wetterturnier>`_
    and used for the penalties/judging.
-   
+ 
    Args:
       config (:obj:`list`): Contains all necessary configs for the
              pywetterturnier package. Please have a look into 
@@ -34,8 +35,7 @@ class getobs( object ):
       date (:obj:`datetime.datetime.date` object with the date for which
              the request should be made.
       wmoww (:obj:`utils.wmowwConversion`): Or None. If None, no conversion will
-            be performed. If set the :meth:`utils.wmowwConversion.convert` method
-            is used to convert observed weather codes into the required ones.
+             be performed. If set the :meth:`utils.wmowwConversion.convert` method is used to convert observed weather codes into the required ones.
    """
 
 
@@ -188,7 +188,7 @@ class getobs( object ):
                             observations should be loaded.
 
       Returns:
-         :obj:`float` or NULL: NULL will be returned if the database
+         :obj:`float` or None: None will be returned if the database
             is empty or the parameter could not have been found, Else
             the numeric value is returned by this method.
       """
@@ -1156,7 +1156,7 @@ class getobs( object ):
          #   "sunday" (sunshine, full day).
          tmp = self.load_obs( station.wmo, 30, 'sunday' )
          if tmp:
-            value =int( np.round(np.float(tmp)/np.float(self._maxSd_[station.wmo]) * 100) ) * 10
+            value = int( np.round(np.float(tmp)/np.float(self._maxSd_[station.wmo]) * 100) ) * 10
          # - If no full day sunshine duration is reported +30h: check full day
          #   sunshie duration +24h (00 UTC report) which is +24 hours from self._date_
          else:
@@ -1164,8 +1164,8 @@ class getobs( object ):
             #   "sunday" (sunshine, full day).
             tmp = self.load_obs( station.wmo, 24, 'sunday' )
             if tmp:
-               Sd = int( np.round(np.float(tmp)/np.float(self._maxSd_[station.wmo]) * 100) ) * 10
-               value = Sd 
+               value  = int( np.round(np.float(tmp)/np.float(self._maxSd_[station.wmo]) * 100) ) * 10
+                
             # - Else try to sum up hourly observations
             else:
 	       # Check if +24h record is here. If the record is here but we have
@@ -1182,17 +1182,21 @@ class getobs( object ):
                   cur = self.db.cursor()
                   cur.execute( sql )
                   tmp = cur.fetchall()
-
-                  # - No data? Return None
-                  if len(tmp) == 0:
-                     value = None
+                  print "tmp"
+                  print tmp
+                  # - No data? Return None 
+                  if len(tmp) == 0 or tmp == None:
+                     print "None"
+                     return None
                   else:
                      # - Else sum up
                      value = 0
-                     for rec in tmp: value += int(rec[0])
+                     for rec in tmp:
+                        value += int(rec[0])
+                        print value
                      value = int( np.round(np.float(value)/np.float(self._maxSd_[station.wmo]) * 100) ) * 10
 	       # Else we report None 
-               value = None
+               else: value = None
 
       # - Return value
       return value
@@ -1315,7 +1319,7 @@ class getobs( object ):
             # - If there is no user-change, update
             elif res[0][0] == 0:
                #print "    Update ...."
-               #print( sql_update % (now,self.data[stn.wmo][key],stn.wmo,param[key],betdate) )
+               #print( sql_update % (now,self.data[wmo][key],wmo,param[key],betdate) )
                cur.execute( sql_update % (now,self.data[stn.wmo][key],stn.wmo,param[key],betdate) )
    
 
