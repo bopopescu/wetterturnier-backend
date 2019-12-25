@@ -2,6 +2,7 @@
 if __name__ == '__main__':
 
    import sys, os
+   import pandas as pd
    # - Wetterturnier specific methods
    from pywetterturnier import utils, database
 
@@ -24,6 +25,12 @@ if __name__ == '__main__':
    else:
       tdates     = [config['input_tdate']]
 
+   #-p option for testing minimum participations, exponent formula
+   if config['input_param'] == None:
+      typ = "sd_logfit"
+   else:
+      typ = config['input_param']
+
    # - Loading all different cities (active cities)
    cities     = db.get_cities()
    # - If input city set, then drop all other cities.
@@ -35,28 +42,71 @@ if __name__ == '__main__':
 
    userIDs = db.get_all_users()
 
-   measures=("points","points_adj","mean","median","Qlow","Qupp","max","min","sd","part")
+   measures=["points_adj","points","part","mean","median","Qlow","Qupp","max","min","sd"]
 
-   for userID in userIDs:
-      user = db.get_username_by_id(userID)
-      for city in cities:
-         for day in range(3):
-            stats = db.get_stats(userID, city['ID'], measures, 0, day)
-            db.upsert_stats( userID, city['ID'], stats, 0, day)
-   #TODO: Compute rank, rank_adj? 
+   # check whether current tournament is finished to keep open tournaments out of the userstats
+   today              = utils.today_tdate()
+   current            = db.current_tournament()
+   if today > current + 2:
+      last_tdate = current
+   else:
+      if len(tdates) == 1 and tdates[0] == current: tdates = [current - 7]
+      elif current in tdates: tdates.remove( current )
+      last_tdate = current - 7
 
+
+   #calculate tdatestats
    for city in cities:
       if config['input_alldates']:
          tdates = db.all_tournament_dates( city['ID'] )
          print 'ALL DATES'
       for tdate in tdates:
          for day in range(3):
-            stats = db.get_stats(0, city['ID'], measures[2:], tdate, day)
-            db.upsert_stats(0, city['ID'], stats, tdate, day)
+            stats = db.get_stats( city['ID'], measures[-8:]+["sd_upp"], 0, tdate, day )
+            #if all stats are 0 we assume that no tournament took place on tdate
+            if stats.values() == [0] * len(stats):
+               continue
+            else:
+               db.upsert_stats( city['ID'], stats, 0, tdate, day)
+      
+      #Compute citystats which can be used for plotting box whiskers etc
+      #TODO: we should already calculate the fit coefficients m,n / A,B,C later used for plotting here
+      stats = db.get_stats( city['ID'], measures[-7:] + ["mean_part","max_part","min_part","tdates"], last_tdate = last_tdate )
+      db.upsert_stats( city['ID'], stats )
 
-   import PlotStats
-   tdate = max(tdates) - 7
-   PlotStats.plot(db, cities, tdate)
+   if config['input_tdate'] == None:
+
+      #calculate userstats, first import aliases.json as dict
+      from json import load
+      with open("aliases.json") as aliases:
+         aliases = load( aliases )
+      print aliases
+      for userID in userIDs:
+	 user = db.get_username_by_id(userID)
+	 for city in cities:
+	    for day in range(3):
+	       stats = db.get_stats( city['ID'], measures, userID, 0, day, last_tdate, aliases=aliases, typ=typ, pout=25, pmin=50 )
+	       db.upsert_stats( city['ID'], stats, userID, 0, day)
+
+      sql = "SELECT wu.user_login, us.points_adj %s FROM %swetterturnier_userstats us JOIN wp_users wu ON userID = wu.ID WHERE cityID=%d AND part >= 25 AND user_login NOT LIKE 'Sleepy' ORDER BY points_adj DESC"
+      cols = ",".join( measures[:4] )
+ 
+      if config['input_filename'] == None:
+         filename = "eternal_list"
+      else:
+         filename = config['input_filename']
+
+      #generating ranking table output, write to .xls file
+      with pd.ExcelWriter( "plots/%s.xls" % filename ) as writer:
+         for city in cities:
+            table = pd.read_sql_query( sql % ( cols, db.prefix, city['ID'] ), db )
+            table.to_excel( writer, sheet_name = city["hash"] )
+            print table
+
+      #now we call a plotting routine which draws some nice statistical plots
+      import PlotStats
+      tdate = max(tdates) - 7
+      PlotStats.plot(db, cities, tdate)
 
    db.commit()
    db.close()

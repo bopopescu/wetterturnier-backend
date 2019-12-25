@@ -18,10 +18,9 @@ if __name__ == '__main__':
 
    import sys, os
    import numpy as np
+   from datetime import datetime
    # - Wetterturnier specific modules
-   from pywetterturnier import utils
-   from pywetterturnier import database
-   from pywetterturnier import mitteltip
+   from pywetterturnier import utils, database, mitteltip
 
    # - Evaluating input arguments
    inputs = utils.inputcheck('ComputeMeanBets')
@@ -70,19 +69,31 @@ if __name__ == '__main__':
       else:
          active_groups = [config['input_user']]
 
+   #the groups do not actually exists in the database but they consist of the same participants as "Automaten"
+   MOS = ["MOS", "MOS-Max", "MOS-Min", "MOS-Random"]
+   for i in MOS:
+      today = utils.today_tdate()
+      hour = datetime.utcnow().hour
+      minute = datetime.utcnow().minute
+      if i == "MOS-Random" and not (hour == 15 and minute in [0,1] and today == tdates[0]):
+         continue
+         #pass
+      active_groups.append( i )
+ 
    # - Create new user
    for group in active_groups:
-
-      group_name = group
-      # Do NOT compute mitteltips for this Guy
-      if group == "Referenztipps" : continue
-      elif group == "Automaten": group_name = "MOS"
+      
+      # Do NOT compute mitteltips for these guys
+      if group in ["Referenztipps", "Automaten"] : continue
+      #MOS is actually the same group as Automaten (but sounds cooler)
       # - Each group has its own user which is
       #   GRP_<grupname>. Check if exists or create.
-      username = 'GRP_%s' % group_name
+      username = 'GRP_%s' % group
       db.create_user( username )
       userID = db.get_user_id( username )
-      groupID = db.get_group_id( group )
+      if group in MOS:
+         groupID = db.get_group_id( "Automaten" )
+      else: groupID = db.get_group_id( group )
 
       # - Getting users for the groups
       for city in cities:
@@ -108,8 +119,9 @@ if __name__ == '__main__':
 
             if len(participants) < 2:
                print "[!] Less than 2 participants for this group/city/tdate."
-               print "    Skip computation of mean bets and delete old bet if exists."
+               print "    Skip computation of mean bets and delete old group bet if exists."
                group_userID = db.get_user_id( username )
+               print "Group's userID: %s" % group_userID
                db.delete_bet( group_userID, city['ID'], tdate )
                continue
 
@@ -131,7 +143,6 @@ if __name__ == '__main__':
             #   never compute the corresponding points). Skip. 
             # ----------------------------------------------------------------
             if tdate < 12027:
-               from judgingclass20021206 import judging
                print '[!] I dont know the rules to compute points before 2002-12-06'
                print '    Therefore it makes no sense to compute MeanBets. Skip.' 
                continue
@@ -140,14 +151,14 @@ if __name__ == '__main__':
             # - List element to store the two dict dbects
             #   containing the bets for Petrus
             # -------------------------------------------------------------
-
-            if group in ["MOS-Max", "MOS-Min"]:
+            if group in MOS[1:3]:
                if group == "MOS-Max":
                   function = max
                elif group == "MOS-Min":
-                  function = min
-               groupID = db.get_group_id( "Automaten" )
+                  function = min 
                bet = mitteltip.statistics(db,'group',groupID,city,tdate,function)
+            elif group == "MOS-Random":
+               bet = mitteltip.random(db,'group',groupID,city,tdate)
             else:
                bet = mitteltip.mitteltip(db,'group',groupID,city,tdate)
    
@@ -172,3 +183,5 @@ if __name__ == '__main__':
    
    db.commit()
    db.close()
+
+print today, hour, minute

@@ -130,7 +130,6 @@ if __name__ == '__main__':
    #   no input tournament date -t/--tdate.
    if config['input_tdate'] == None:
       tdates     = [db.current_tournament()]
-      #tdates     = [db.last_tournament()]
    else:
       tdates     = [config['input_tdate']]
 

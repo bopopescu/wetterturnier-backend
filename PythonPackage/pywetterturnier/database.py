@@ -10,10 +10,9 @@
 # - L@ST MODIFIED: 2018-12-16 11:49 on marvin
 # -------------------------------------------------------------------
 
-
+from __future__ import division
 import MySQLdb
 import utils
-
 
 def sql_tuple(IDs):
    """Format a list of integers (IDs) to a tuple fitting the SQL IN(...) statement"""
@@ -48,19 +47,18 @@ class database(object):
 
       self.prefix = self.config['mysql_prefix']
 
-   
    # ----------------------------------------------------------------
    # ----------------------------------------------------------------
    def get_participants_in_group(self,groupID,cityID,tdate,playing=True):
       """Active players in a specific group.
       Getting active players from a certain group for a certain
       city and weekend.
-      
-      Args:
+
+      Args:                                                                                                        
          groupID (:obj:`int`): ID of the group.
          cityID  (:obj:`int`): ID of the current city.
          tdate   (:obj:`int`): tournament date as integer representation.
-      
+
       Returns:
          list: List containing the user ID's of the players from
          that specific group who were participating in the tournament for
@@ -78,7 +76,7 @@ class database(object):
 
          sql = []
          sql.append("SELECT gu.userID")
-         sql.append("FROM {0:s}wetterturnier_groupusers AS gu".format(self.prefix))
+         sql.append("FROM {0:s}wetterturnier_groupusers AS gu".format(self.prefix))                                
          sql.append("LEFT OUTER JOIN wp_wetterturnier_betstat AS bet")
          sql.append("ON gu.userID=bet.userID")
          sql.append("where groupID = {0:d} AND tdate = {1:d}".format(groupID,tdate))
@@ -90,7 +88,7 @@ class database(object):
       data = cur.fetchall()
       res = []
       for i in data: res.append( int(i[0]) )
-
+      
       return res
 
    # ----------------------------------------------------------------
@@ -103,7 +101,7 @@ class database(object):
           MySQLdb: Database handler object.
       """
 
-      print '  * Establishing database connection'
+      #print '  * Establishing database connection'
       host   = self.config['mysql_host']
       user   = self.config['mysql_user']
       passwd = self.config['mysql_pass']
@@ -126,7 +124,6 @@ class database(object):
           MySQLdb.curser: Object, database cursor.
       """
       return self.db.cursor()
-
    def execute(self,sql):
       """Simple wrapper to `MySQL.execute`
       
@@ -136,7 +133,6 @@ class database(object):
            tuple: Return from `MySQLdb.execute`.
       """
       return self.db.execute(sql)
-
    def executemany(self,sql,data):
       """Simple wrapper to `MySQL.executemany`.
 
@@ -148,7 +144,6 @@ class database(object):
          Return from :meth:`MySQLdb.executemany`.
       """
       return self.db.executemany(sql,data)
-
    def commit(self):
       """Simple wrapper to :meth:`MySQL.commit`."""
       self.db.commit()
@@ -317,26 +312,39 @@ class database(object):
    # -------------------------------------------------------------------
    # - Getting dict containing all active cities in the database. 
    # -------------------------------------------------------------------
-   def get_cities(self):
+   def get_cities(self, sort=True, active=True ):
       """Loading city information from the database.
       Loads all active cities from the database which can then be used
       to loop over or whatever you'll do with it. 
+
+      Args:
+         sort (:obj:`bool`): True if the cities should be sorted by their cityID.
+         active (:obj:`bool`): True if only active cities should be shown.
+
       Returns:
          list: A list containing one dict per city where each dict
          consists of the keys 'name', 'hash' and 'ID'.
+   
+      .. todo:: Would be nice to return cityclass objects or something. However,
+         needs some effort as I have to change a few lines of code.
       """
-      print '  * %s' % 'looking active cities'
-      sql = 'SELECT * FROM %swetterturnier_cities WHERE active = 1 ' + \
-            'ORDER BY ID'
+
+      #print '  * %s' % 'looking active cities'
+      sql = 'SELECT * FROM %swetterturnier_cities'
+      if active: sql += ' WHERE active = 1'
+      if sort: sql+=' ORDER BY ID'
+
       cur = self.cursor()
       cur.execute( sql % self.prefix )
       data = cur.fetchall()
 
       if len(data) == 0:
          utils.exit('Cannot load city data from database in database.current_tournament')
+      
       res = []
       for elem in data:
          res.append( {'ID':int(elem[0]),'name':str(elem[1]),'hash':str(elem[2])} )
+      
       return res
 
    def get_city_names(self):
@@ -398,14 +406,11 @@ class database(object):
    # -------------------------------------------------------------------
    # - Current tournament
    # -------------------------------------------------------------------
-   def current_tournament(self):
+   def current_tournament(self, verbose=False):
       """Returns tdate for current tournament.
       The tdate is the number of days since 1970-01-01. Loading the
-      ``max(tdate)`` from the bets table.
-      If all works as it should bets can only be placed for the upcoming
-      tournament. And this method is used to compute e.g., the points and
-      stuff. Therefore we just have to know which are the newest bets and
-      loop over them.
+      ``max(tdate)`` from the dates table which is smaller than the
+      current date (utcnow).
 
       Return:
          int: Integer date (days since 1970-01-01)
@@ -417,16 +422,15 @@ class database(object):
       import numpy as np
       import datetime as dt
 
-      print '  * %s' % 'Searching current tournament date'
+      if verbose: print '  * %s' % 'Searching current tournament date'
       today = int(np.floor(float(dt.datetime.now().strftime("%s"))/86400))
-      print 'Today is %s' % today
+      #print today
       sql = 'SELECT max(tdate) FROM %swetterturnier_dates WHERE tdate <= %d'
-
       cur = self.cursor()
-      cur.execute( sql % (self.config['mysql_prefix'],today) )
+      cur.execute( sql % (self.prefix ,today) )
       tdate = cur.fetchone()[0]
 
-      print '    Current tournament date is: %d' % tdate
+      if verbose: print '    Current tournament date is: %d' % tdate
 
       return tdate
 
@@ -605,7 +609,7 @@ class database(object):
         
          typ (:obj:`str`):     Any of type ``'all'``, ``'user'``, or ``'group'``.
          ID (:obj:`int`):      Ignored when ``type = 'all'``. Else the input has to be of type ineger
-                               defining the userID (for ``type = 'user'``) or groupID (for ``type = 'gruop'``).
+                               defining the userID (for ``type = 'user'``) or groupID (for ``type = 'group'``).
          cityID (:obj:`int`):  Numeric ID of the city.
          paramID (:obj:`int`): Numeric parameter ID.
          tdate (:obj:`int`):   Tournament date (if tournament starts on Friday, this is
@@ -644,7 +648,7 @@ class database(object):
             return res
       
       # - bdate is either a bet date (days since 1970-01-01) or
-      #   an integer lower 5. If the second one is the case
+      #   an integer lower equal 6. If the second one is the case
       #   bdate = tdate+bdate to get days.
       if bdate <= 6: bdate = tdate + bdate
       cur = self.db.cursor()
@@ -724,9 +728,11 @@ class database(object):
          # - get only human players, no sleepy no groups, no automats, no reference tips
          # TODO: exclude automatons in 'human' mode
          # - look for Petrus, Moses and Persistenz ID to exclude them:
-         PetrusID = self.get_user_id('Petrus'); MosesID = self.get_user_id('Moses')
+         PetrusID = self.get_user_id('Petrus')
+         MosesID = self.get_user_id('Moses')
          if typ == 'human':
-            DonnerstagID = self.get_user_id('Donnerstag'); FreitagID = self.get_user_id('Freitag')
+            DonnerstagID = self.get_user_id('Donnerstag')
+            FreitagID    = self.get_user_id('Freitag')
          # - Create statement
          sql = []
          sql.append("SELECT bet.value AS value FROM %swetterturnier_bets AS bet" % self.prefix)
@@ -738,7 +744,14 @@ class database(object):
          sql.append("AND bet.cityID = %d AND bet.paramID = %d" % (cityID,paramID) )
          sql.append("AND bet.tdate = %d AND bet.betdate = %d" % (tdate,bdate) )
          if typ == 'human':
-            sql.append("AND bet.userID NOT IN (%d,%d,%d,%d,%d,%d)" % (deadID,PetrusID,MosesID,DonnerstagID,FreitagID)) 
+            ref = self.get_group_id('Automaten')
+            cur.execute( 'SELECT userID FROM %swetterturnier_groupusers WHERE groupID = %d' % (self.prefix, ref) )
+            tmp = cur.fetchall()
+            ref = [];
+            for rec in tmp:
+               ref.append('AND bet.userID != %d' % rec[0] )
+            sql.append("AND bet.userID NOT IN (%d,%d,%d,%d,%d)" % (deadID,PetrusID,MosesID,DonnerstagID,FreitagID))
+            sql.append(" ".join(ref)) 
          else:
             sql.append("AND bet.userID NOT IN (%d,%d,%d)" % (deadID,PetrusID,MosesID))
          #print "\n".join(sql)
@@ -914,6 +927,7 @@ class database(object):
       cur.execute( sql % (self.prefix,self.prefix,cityID,paramID,bdate) )
 
       data = cur.fetchall()
+      #print data
       if not data:
          return False
       elif wmo == None:
@@ -932,11 +946,12 @@ class database(object):
    # -------------------------------------------------------------------
    def get_parameter_names(self, active = False, sort=False):
       """Returns all parameter names.
-      If input active is set, only active parameters will be returned.
+      If input active is set, only active parametres will be returned.
       
       Args:
         active (:obj:`bool`, optional): If True only active parameters will
         be returned.
+        sort (:obj:`bool`): True if the params should be sorted by the sort column in the wetterturnier_params table.
 
       Return:
         list or bool: False if no parameters can be found. Else a list will
@@ -946,7 +961,7 @@ class database(object):
       sql = "SELECT paramName FROM %swetterturnier_param" % self.prefix
       if active: sql += " WHERE active = 1"
       if sort: sql += " ORDER BY sort"
-      cur.execute( sql ) 
+      cur.execute( sql )
       data = cur.fetchall()
       if not data:
          return False
@@ -977,25 +992,6 @@ class database(object):
       else:
          return int(data[0])
 
-   def get_parameter_name_by_id(self,paramID):
-      """Opposite of function get_parameter_id
-
-      Args:
-         paramID (:obj:`int`): Parameter ID
-
-      Return:
-         False if the parameter cannot be found in the database or
-         the corresponding integer parameter ID.
-      """
-      cur = self.db.cursor()
-      cur.execute('SELECT paramName FROM %swetterturnier_param WHERE paramID=%d' % (self.prefix, paramID))
-      data = cur.fetchone()
-      if not data:
-         return False
-      else:
-         return int(data[0])
-
-
    
    # -------------------------------------------------------------------
    # - Returns user id. And creates user if necessary.
@@ -1014,7 +1010,6 @@ class database(object):
         int: Numeric userID.
       """
 
-      import utils
       userID = self.get_user_id( utils.nicename( name, self.config['conversion_table'] ) )
       if not userID:
           self.create_user( utils.nicename( name, self.config['conversion_table'] ) )
@@ -1025,7 +1020,7 @@ class database(object):
 
       # - Return the id
       return userID
-   
+      
 
    # -------------------------------------------------------------------
    # - Returning user ID
@@ -1047,7 +1042,7 @@ class database(object):
          if data == None:
             continue
          else:
-            return int(data[0])
+            return int(data[0])         
 
 
    # -------------------------------------------------------------------
@@ -1100,30 +1095,14 @@ class database(object):
 
 
    def get_groups(self, active=False):
-      cur = self.db.cursor()
-      sql = 'SELECT groupName FROM %swetterturnier_groups'
-      if active: sql += 'WHERE active = 1'
-      cur.execute(sql % self.prefix)
-      data = cur.fetchall()
-
-      # - Make nice list
-      res = [];
-      for elem in data: res.append(elem[0])
-
-      return res
-
-
-   # -------------------------------------------------------------------
-   # - Returning active groups 
-   # -------------------------------------------------------------------
-   def get_active_groups(self):
       """Returns all active group names from database.
 
       Returns:
-        list: List of strings containing all active group names.
+        list: List of strings containing all group names (of active groups).
       """
       cur = self.db.cursor()
-      sql = 'SELECT groupName FROM %swetterturnier_groups WHERE active = 1'
+      sql = 'SELECT groupName FROM %swetterturnier_groups'
+      if active: sql += ' WHERE active = 1'
       cur.execute(sql % self.prefix)
       data = cur.fetchall()
 
@@ -1132,6 +1111,12 @@ class database(object):
       for elem in data: res.append(elem[0])
 
       return res
+
+   # -------------------------------------------------------------------
+   # - Returning only active groups 
+   # -------------------------------------------------------------------
+   get_active_groups = lambda self : self.get_groups( active=True)
+
 
    # -------------------------------------------------------------------
    # - Returning user ID
@@ -1155,24 +1140,33 @@ class database(object):
          return int(data[0])
 
 
-   def get_users_in_group(self, groupID=None, group=None, active=True, sort=False):
-      #group == str, groupID == int
+   def get_users_in_group(self, groupID=None, group=False, active=True, sort=False):
+      """Returns all members of a given groupID or group name.
+
+      Args:
+        groupID (:obj:`int`): groupID.
+        group (:obj:`str`): The group name.
+        active (:obj:`bool`): True if only active members should be returned.
+        sort (:obj:`bool`): True if the user should be sorted by the sort column in the wetterturnier_groupusers table. 
+      
+      Returns:
+        List of userIDs for the given group.
+      """
       if group:
          return self.get_users_in_group( groupID = self.get_group_id(group) )
       else:
-         cur = self.db.cursor()
+         cur = self.cursor()
          sql = 'SELECT userID FROM %swetterturnier_groupusers WHERE groupID = %d'
          if active: sql+=' AND active=1'
          if sort: sql+=' ORDER BY sort'
          cur.execute(sql % (self.prefix, groupID))
          data = cur.fetchall()
-
+         
          # - Make nice list
          res = [];
          for elem in data: res.append(elem[0])
 
          return res
-
 
    # -------------------------------------------------------------------
    # - Create a groupuser (add user to group as a member)
@@ -1186,7 +1180,7 @@ class database(object):
          group (:obj:`str`):      Group name.
          since (:obj:`datetime`): Usually current time. Add user to a group.
                                   the user was a member of the group.
-         active (:obj:`id`):      If user is an active member of the group or not.
+         active (:obj:`id`):      If user is an actie member of the group or not.
                                   Typically 1 as you are adding the user in that split second.
       """
    
@@ -1235,8 +1229,8 @@ class database(object):
       Args:
          cityID (:obj:`int`): Numeric city ID.
          tdate (:obj:`int`):  Tournament date, days since 1970-01-01.
-         ignore (:obj:`tuple`): tuple of userIDs, IDs of the users which should
-                              be ignored (e.g., Sleepy's ID or Persistencies).
+         ignore (:obj:`int`): Numeric user ID, ID of the user which should
+                              be ignored (e.g., Sleepy's ID).
       Returns:
          tuple tuple: Tuple tuple as fetched from database. Typically including
          two tuples, first for Saturday, second for Sunday.
@@ -1248,66 +1242,116 @@ class database(object):
             'ON b.userID = u.ID ' + \
             'WHERE cityID = %d AND tdate = %d AND userID NOT IN%s ' + \
             'AND NOT b.points IS NULL'
-      cur.execute( sql % ( self.prefix, self.prefix,cityID,tdate,ignore) )
+      cur.execute( sql % ( self.prefix, self.prefix,cityID,tdate,sql_tuple(ignore)) )
       data = cur.fetchall()
 
-      ###print data
+      #print data
       if not data:
          return False
       else:
          return data
 
+   #compute statistics out of some wetterturnier tables like betstat
+   def get_stats(self, cityID, measures, userID=False, tdate=False, day=0, last_tdate=False, referenz=True, mitteltips=True, aliases=False, typ="sd_logfit", ymax=False, pout=25, pmin=50, midyear=2010, span=False, dates=False, verbose=False):
+      
+      res = {} #results will be saved here with measures as keys, tdate as subkeys
 
-   def get_stats(self, userID, cityID, measures, tdate=False, day=0):
+      import numpy as np
 
-      from numpy import mean, median, percentile
-
-      def sd(x, bessel=1):
-         mean_x = mean(x); n = len(x)
-         if n == 0: return None
-         elif n == 1: return 0
-         res = 0
-         for i in x: res += ( i - mean_x )**2
-         return ( res / ( n - bessel ) )**0.5
+      Qlow = lambda points : np.percentile(points, 25, interpolation="midpoint")
+      Qupp = lambda points : np.percentile(points, 75, interpolation="midpoint")
+      logfun = lambda A, B, C, x : A * np.log( B * x ) + C
 
       cur = self.db.cursor()
       day_strs = ["", "_d1", "_d2"]
       day_str = day_strs[0]
       if day != 0:
          day_str = day_strs[day]
+      if last_tdate: last_tdate_str = " AND tdate<=" + str(last_tdate)
+      else: last_tdate_str = ""
 
       sql = "SELECT points"+day_str+" FROM %swetterturnier_betstat WHERE "
-      if tdate:
-         # We don't want Sleepy and Referenztipps in our tdatestats!
+      if tdate or (not tdate and not userID and cityID):
+         # We don't want Sleepy in our tdatestats!
          exclude = [self.get_user_id("Sleepy")]
-         groupID = self.get_group_id( "Referenztipps" )
-         for i in self.get_participants_in_group( groupID, cityID, tdate, playing=False ):
-            exclude.append( i )
-         #only include users who really played on tdate (no sleepy points!)
-         played = sql_tuple( self.get_participants_in_city( cityID, tdate ) )
+         if not referenz:
+            groupID = self.get_group_id( "Referenztipps" )
+            for j in self.get_participants_in_group( groupID, cityID, tdate, playing=False ):
+               exclude.append( j )
 
-         sql += "cityID=%d AND tdate=%d AND userID NOT IN%s AND userID IN%s"
-         #print sql % ( self.prefix, cityID, tdate, tuple(exclude), played )
-         cur.execute( sql % ( self.prefix, cityID, tdate, tuple(exclude), played ) )
-      else:
-         # check whether current tournament is finished to keep open tournaments out of the userstats
-         today              = utils.today_tdate()
-         current_tnmt       = self.current_tournament()
-         if today > current_tnmt + 2:
-            last_tdate = current_tnmt
-         else:
-            last_tdate = current_tnmt - 7
+         if not mitteltips:
+            #include no groups
+            sql2 = "SELECT ID FROM %susers WHERE user_login LIKE \"%s\""
+            cur.execute( sql2 % ( self.prefix, "GRP_%" ) )
+            data2 = cur.fetchall()
+            for j in data2:
+               exclude.append( int(j[0]) )
 
+         if tdate:
+            #only include users who really played on tdate (no sleepy points!)
+            played = sql_tuple( self.get_participants_in_city( cityID, tdate ) )
+            sql += "cityID=%d AND tdate=%d AND userID NOT IN%s AND userID IN%s" + last_tdate_str
+            cur.execute( sql % ( self.prefix, cityID, tdate, sql_tuple(exclude), played ) )
+
+         elif cityID:
+            sql2 = "SELECT part FROM %swetterturnier_tdatestats WHERE cityID=%d" + last_tdate_str
+            cur.execute( sql2 % ( self.prefix, cityID ) )
+            data = cur.fetchall()
+            for i in measures:
+               parts = []
+               for j in data:
+                  parts.append( int(j[0]) )
+               if len(parts) == 0: continue
+               elif i == "mean_part": res[i] = np.mean( parts )
+               elif i == "max_part": res[i] = max( parts )
+               elif i == "min_part": res[i] = min( parts )
+               elif i == "tdates": res[i] = len( parts )
+
+            sql += "cityID=%d AND userID NOT IN%s" + last_tdate_str
+            cur.execute( sql % ( self.prefix, cityID, sql_tuple(exclude) ) )
+
+      elif userID:
+         userIDs = [userID]
+         #if we are using an alias dict we replace all aliases of a user with his/her original/main username (dict keys)
+         if aliases:
+            username = self.get_username_by_id( userID )
+            if username in aliases.keys() or username in sum(aliases.values(), []):
+               if verbose: print username
+               for j in aliases.keys():
+                  if username == j:
+                     for k in aliases[j]:
+                        userIDs.append( self.get_user_id( k ) )
+                     break
+                  else:
+                     if username in aliases[j]:
+                        userIDs.append( self.get_user_id( j ) )
+                        for k in aliases[j]:
+                           userID = self.get_user_id( k )
+                           if userID not in userIDs:
+                              userIDs.append( userID )
+               if verbose: print userIDs
+
+         """
+         if not sleepyID in userIDs:
+         #if we would use this code, sleepy gets 0 stats. does it make a difference? if not, remove!
+         
          #again only if a user actually participated on tdate we add his points to the stats
-         sql2 = "SELECT tdate FROM %swetterturnier_bets WHERE userID=%d AND cityID=%d"
-         cur.execute( sql2 % ( self.prefix, userID, cityID ) )
+         sql2 = "SELECT tdate FROM %swetterturnier_bets WHERE userID IN%s AND cityID=%d"
+         #print sql2 % ( self.prefix, sql_tuple(userIDs), cityID )
+         cur.execute( sql2 % ( self.prefix, sql_tuple(userIDs), cityID ) )
          data2 = cur.fetchall()
          tdates = []
          for i in data2:
             if i[0] not in tdates: tdates.append( int(i[0]) )
 
-         sql += "userID=%d AND cityID=%d AND tdate<=%d AND tdate IN%s"
-         cur.execute( sql % ( self.prefix, userID, cityID, last_tdate, sql_tuple(tdates) ) )
+         sql += "userID IN%s AND cityID=%d AND tdate IN%s" + last_tdate_str
+         cur.execute( sql % ( self.prefix, sql_tuple(userIDs), cityID, sql_tuple(tdates) ) )
+         """
+         sql += "userID IN%s AND cityID=%d" + last_tdate_str
+         cur.execute( sql % ( self.prefix, sql_tuple(userIDs), cityID ) )
+
+      else:
+         utils.exit( "Wrong usage of get_stats!")
 
       data = cur.fetchall()
       points = []
@@ -1316,66 +1360,225 @@ class database(object):
          if i[0] == None: continue
          else: points.append( float(i[0]) )
 
-      # important for participant/participation count, otherwise part would be 1 if a player/date actually has 0 part*s
       if len(points) == 0: points = [.0]
 
-      res = {}
       for i in measures:
          i += day_str
          if i == "points"+day_str:
             res[i] = sum(points)
-         elif i == "points_adj":
-            #inflation adjusted points, only for all days?
-            #TODO formula???
-            res[i] = 0
+         elif i in ["points_adj", "points_adj1", "points_adj2", "points_adjX"]:
+            
+            if verbose:
+               print self.get_username_by_id( userIDs[0] )
+               print i,"\n"
+
+            #skip Sleepy
+            if self.get_user_id("Sleepy") in userIDs: continue
+            #inflation adjusted points, only for all days
+
+            #if a user has less than 25 participations, he will not get a rank in the eternal list!
+            parts = float(len(points))
+
+            """
+            find all dates where the user actually played
+            for each date calculate:
+            (points-points) / (ymax-median*)
+            sum up and divide by number of tdates
+            * daily median and median fitted by PlotStats
+              should be calculated earlier in ComputeStats with other citystats!
+            """
+
+            tdates = {}
+            sql = "SELECT tdate, points FROM %swetterturnier_betstat WHERE userID IN%s AND cityID=%d"
+            if "1" in i or "2" in i or "X" in i:
+               if midyear:
+                  middle_tdate = str(utils.string2tdate(str(midyear)+"-01-01"))
+               #print "Middle of tournament (tdate): %s" % middle_tdate
+               if "1" in i:
+                  sql+=" AND tdate<="+middle_tdate
+               elif "2" in i:
+                  sql+=" AND tdate>"+middle_tdate
+               elif span:
+                  if verbose: print span
+                  sql+=" AND tdate BETWEEN "+str(span[0])+" AND "+str(span[1])
+                  #print sql
+            cur.execute( sql % (self.prefix, sql_tuple(userIDs), cityID) )
+            data = cur.fetchall()
+
+            for j in data:
+               tdates[j[0]] = {}
+               tdates[j[0]]["points"] = j[1]
+
+            #get the actual median for each tdate
+            sql = "SELECT tdate, median, sd from %swetterturnier_tdatestats WHERE cityID=%d AND tdate IN%s"
+            cur.execute( sql % (self.prefix, cityID, sql_tuple(tdates.keys()) ) )
+            data3 = cur.fetchall()
+            for j in data3:
+               tdates[j[0]]["median"] = j[1]
+               tdates[j[0]]["sd_upp"] = j[2]
+
+            sql = "SELECT %s FROM %swetterturnier_citystats WHERE cityID=%d"
+            
+            #calculate the fitted median for each tdate
+            if typ == "median_fit":
+               cur.execute( sql % ( "A,B,C", self.prefix, cityID ) )
+               data2 = cur.fetchall()
+               for j in data2:
+                  A = j[0]; B = j[1]; C = j[2]
+               for j in data:
+                  tdates[j[0]]["median_fit"] = logfun(A, B, C, j[0])
+                  #A * np.log( B * j[0] ) + C
+               if ymax < 100:
+                  ymax = logfun( A, B, C, last_tdate + ymax*365 )
+
+            elif typ == "sd_fit":
+               cur.execute( sql % ( "m,n", self.prefix, cityID ) )
+               data = cur.fetchall()
+               m = data[0][0]; n = data[0][1]
+               if m == None or n == None: continue
+
+            elif typ == "sd_logfit":
+               cur.execute( sql % ( "T,U,V", self.prefix, cityID ) )
+               data = cur.fetchall()
+               T = data[0][0]; U = data[0][1]; V = data[0][2]
+               if T == None or U == None or V == None: continue
+
+            elif typ == "sd":
+               print "Taking tournament sd"
+            else: utils.exit("Unknown typ for get_stats() function call!")
+
+            points_adj = []
+
+            if verbose:
+               if typ == "median_fit":
+                  print "ymax = "+str(ymax)
+                  print "tdate      points med_fit percent median"
+               elif typ in ["sd","sd_fit"]:
+                  print "tdate      points median sd      points_adj"
+
+            for t in sorted(tdates.keys()):
+               if {"points","median","median_fit"} <= set(tdates[t]):
+                  med = tdates[t]["median"]
+                  med_fit = tdates[t]["median_fit"]
+                  if med_fit in [None,ymax] or tdates[t]["points"] == None: continue
+                  #med = (med + med_fit) / 2
+                  perc = (tdates[t]["points"] - med) / (ymax - med_fit)
+                  if verbose:
+                     print utils.tdate2string(t), str(int(round(tdates[t]["points"]))).ljust(6), str(int(round(med_fit))).ljust(7), str(int(round(perc*100))).ljust(7), str(int(round(med))).ljust(6)
+
+               elif {"points","median","sd_upp"} <= set(tdates[t]):
+                  med = tdates[t]["median"]
+                  if typ == "sd_fit": sd = m*t + n
+                  elif typ == "sd_logfit": sd = logfun(T, U, V, t)
+                  else: sd = tdates[t]["sd_upp"]
+                  #if we cannot calculate sd, there were certainly too little parts (<3)
+                  if sd in [0,None] or np.isnan(sd): print "SD == 0/None"; continue
+                  perc = (tdates[t]["points"] - med) / sd
+                  if verbose:
+                     print utils.tdate2string(t), str(tdates[t]["points"]).ljust(6), str(med).ljust(6), str(round(sd,2)).ljust(7), str(round(perc,2)).ljust(10)
+ 
+               else: continue
+
+               points_adj.append( perc )
+
+            if len(points_adj) == 0: points_adj.append(0)
+            
+            if verbose:
+               print ""
+
+            if parts < pout: res[i] = 0
+            else:
+               if parts >= pmin:
+                  K = 1.
+               else:
+                  K = parts / pmin
+               res[i] = round(K * np.mean(points_adj), 4)
+               if "sd_" in typ: res[i]*=1000
+               elif typ == "median_fit": res[i]*=100
+
          elif i == "mean"+day_str:
-            res[i] = mean(points)
+            res[i] = round(np.mean(points), 1)
          elif i == "median"+day_str:
-            res[i] = median(points)
+            res[i] = np.median(points)
          elif i == "Qlow"+day_str:
-            res[i] = percentile(points, 25, interpolation="midpoint")
+            res[i] = Qlow(points)
          elif i == "Qupp"+day_str:
-            res[i] = percentile(points, 75, interpolation="midpoint")
+            res[i] = Qupp(points)
          elif i == "max"+day_str:
             res[i] = max(points)
          elif i == "min"+day_str:
             res[i] = min(points)
          elif i == "sd"+day_str: #standard deviation
-            res[i] = sd(points)
+            sd = np.std(points)
+            if np.isnan(sd): res[i] = 0
+            else: res[i] = sd
          elif i == "part":
-            #participatants/participations, only for all days
+            """
+            important for participant/participation count, otherwise part would be 1 if a player/date actually has 0 part*s
+            participants/participations, only for all days
+            """
             if len(points) == 1 and points[0] == 0: res[i] = 0
             else: res[i] = len(points)
+         elif i == "sd_upp"+day_str:
+
+            def sd_c(x, center=None, n=False):
+               S = 0
+               if not n:
+                  n = len(x)
+               else:
+                  n = n
+               if n == 0: return S
+               elif center: x_c = center
+               else: x_c = np.median(x)
+               for x_i in x:
+                  S += (x_i - x_c)**2
+               return np.sqrt(S / n)
+
+            median = res["median"+day_str]
+
+            sql = "SELECT points"+day_str+" from %swetterturnier_betstat WHERE tdate=%d AND cityID=%d AND points"+day_str+" > %f"
+            print sql % (self.prefix, tdate, cityID, median)
+            cur.execute( sql % (self.prefix, tdate, cityID, median) )
+            data = cur.fetchall()
+            x = [j[0] for j in data]
+            print x
+            #Q3 = res["Qupp"+day_str]
+            #sd = sd_c(x, center=Q3)
+            sd = sd_c(x)
+
+            if np.isnan(sd): res[i] = 0
+            else: res[i] = sd
+ 
          else: continue
+
+      if len(res) == 0: utils.exit("No results!")
       return res
 
 
-   def upsert_stats(self, userID, cityID, stats, tdate=False, day=0):
+   def upsert_stats(self, cityID, stats, userID=False, tdate=False, day=0):
+      """Insert stats dict into database"""
       cur = self.db.cursor()
-      print stats
       mstr   = ""
       values, sql_vals = [], ""
       update = " ON DUPLICATE KEY UPDATE "
 
       for i in stats.keys():
-         mstr+="%s, " % i
+         mstr += "%s, " % i
          values.append( stats[i] )
          sql_vals = sql_vals + i + "=VALUES(" + i + "), "
       sql_vals, mstr = sql_vals[:-2], mstr[:-2]
 
-      #print str(tuple(sum( [[cityID],[tdate],values], [])) )
       if tdate:
          sql = "INSERT INTO %swetterturnier_tdatestats (cityID, tdate, %s) VALUES %s" + update + sql_vals
-
-         #print sql % (self.prefix, mstr, str(tuple(sum( [[cityID],[tdate],values], [])) )  )
-         cur.execute( sql % (self.prefix, mstr, str(tuple(sum( [[cityID],[tdate],values], [])) )  ))
-      else:
+         cur.execute( sql % (self.prefix, mstr, str(sql_tuple(sum( [[cityID],[tdate],values], [])) )  ))
+      elif userID:
          sql = "INSERT INTO %swetterturnier_userstats (userID, cityID, %s) VALUES %s" + update + sql_vals
+         cur.execute( sql % (self.prefix, mstr, str(sql_tuple(sum( [[userID],[cityID],values], []) ) ) ))
+      elif cityID:
+         sql = "INSERT INTO %swetterturnier_citystats (cityID, %s) VALUES %s" + update + sql_vals
+         cur.execute( sql % (self.prefix, mstr, str(sql_tuple(sum( [[cityID],values], []) ) ) ))
+      else: utils.exit("Wrong usage of upsert_stats in database.py!")
 
-         #print sql % (self.prefix, mstr, str(tuple(sum( [[userID],[cityID],values], [])) )  )
-         cur.execute( sql % (self.prefix, mstr, str(tuple(sum( [[userID],[cityID],values], []) ) ) ))
- 
- 
    def get_moses_coefs(self, cityID, tdate):
       cur = self.db.cursor()
       moses = {}
@@ -1384,13 +1587,10 @@ class database(object):
          moses[param] = {}
          paramID = self.get_parameter_id( param )
          sql = "SELECT userID, coef FROM %swetterturnier_coefs WHERE cityID=%d AND tdate=%d AND paramID=%d"
-         cur.execute( sql % ( self.prefix, cityID, tdate, paramID ) ) 
+         cur.execute( sql % ( self.prefix, cityID, tdate, paramID ) )
          data = cur.fetchall()
-         if len(data) == 0: return False
          for i in data:
-            #print i[0], i[1]
             user = self.get_username_by_id( i[0] )
-            coef = i[1]
             moses[param][user] = i[1]
       return moses
 
@@ -1400,23 +1600,40 @@ class database(object):
       for param in moses.keys():
          paramID = self.get_parameter_id( param )
          for user in moses[param].keys():
+            #print user
             userID = self.get_user_id( user )
             coef = moses[param][user]; #print coef
             sql = "INSERT INTO %swetterturnier_coefs (cityID, userID, paramID, tdate, coef) VALUES %s ON DUPLICATE KEY UPDATE coef=VALUES(coef)"
             #print sql % ( self.prefix, str(tuple( [cityID, userID, paramID, tdate, coef] ) ) )
-            cur.execute( sql % ( self.prefix, str(tuple( [cityID, userID, paramID, tdate, coef] ) ) ) ) 
+            cur.execute( sql % ( self.prefix, str(tuple( [cityID, userID, paramID, tdate, coef] ) ) ) )
 
 
-   def get_participants_in_city(self, cityID, tdate=False, human=False, sort=True ):
+   def get_participants_in_city(self, cityID, tdate=False, human=False, sort=False, what="display_name" ):
+      """All users participating in a tournament.
+      Getting all players who take place in a certain tournament for a
+      given city and tdate.
 
+      Args:                                                                                                        
+         cityID  (:obj:`int`): ID of the current city.
+         tdate   (:obj:`int`): tournament date as integer representation.
+         human   (:obj:`bool`): Load only human players.
+         sort    (:obj:`int`): Order users by their...
+         what    (:obj:`str`): display_name (default). Other possible arguments:
+         "user_login", "nicename"
+
+      Returns:
+         list: List containing the user IDs of the players
+         participating in the tournament for a given cityID and tdate.
+         Can be a list of length 0 as well.
+      """
       cur = self.db.cursor()
       exclude = [self.get_user_id("Sleepy")]
 
       if human:
          #We need to exclude all groups, referenz tips and automatons
          groups = self.get_groups()
-	 for group in groups:
-	    exclude.append( self.get_user_id( "GRP_" + group ) )
+         for group in groups:
+            exclude.append( self.get_user_id( "GRP_" + group ) )
 
          for group in ["Referenztipps", "Automaten"]:
             groupID = self.get_group_id( group )
@@ -1424,11 +1641,16 @@ class database(object):
             for userID in userIDs:
                exclude.append( userID )
 
-      exclude = sql_tuple(exclude)
+      exclude = sql_tuple( exclude )
 
-      sql = "SELECT userID FROM %swetterturnier_bets wb JOIN wp_users wu ON wb.userID=wu.ID WHERE cityID=%d AND tdate=%d AND userID NOT IN%s"
-      if sort: sql += " ORDER BY display_name"
-      #print sql % ( self.prefix, cityID, tdate, exclude )
+      if sort:
+         if what not in ["display_name", "user_login", "nicename"]:
+            utils.exit("Wrong input on database.get_participants_in city!")
+         sql = "SELECT userID FROM %swetterturnier_bets wb JOIN wp_users wu ON wb.userID=wu.ID WHERE cityID=%d AND tdate=%d AND userID NOT IN%s ORDER BY "+what
+
+      else:
+         sql = "SELECT userID FROM %swetterturnier_bets WHERE cityID=%d AND tdate=%d AND userID NOT IN%s"
+      
       cur.execute( sql % ( self.prefix, cityID, tdate, exclude ) )
       data = cur.fetchall()
 
@@ -1442,6 +1664,7 @@ class database(object):
    def find_missing_obs(self, cityID, tdate=False ):
       """
       Check whether too many obs are missing for a given city (and tdate) to compute Moses.
+      Returns True if obs are missing and False if everything is OK.
       """
       if not tdate:
          tdate = self.current_tournament()
@@ -1455,13 +1678,12 @@ class database(object):
             if type(obs) == bool:
                print "Obs in city '%s' have to many missing parameters on %s (tdate %d)!" % ( self.get_city_name_by_ID(cityID), utils.tdate2string(tdate), tdate )
                return True
-
+         
       return False
 
 
-   # find incomplete bets for a given tdate and cityID
    def find_missing_bets(self, cityID, tdate=False ):
-
+      """Find incomplete bets for a given tdate and cityID"""
       if not tdate:
          tdate = self.current_tournament()
 
@@ -1470,6 +1692,13 @@ class database(object):
       missing = []
 
       for userID in userIDs:
+         #another possible solution:
+         """
+         sql = "SELECT * FROM %swetterturnier_bets WHERE userID=%d AND cityID=%d AND tdate=%d"
+         if cur.execute( sql % (self.prefix, table, userID, cityID, tdate) ) < len(params)*2:
+            missing.append( userID )
+            break
+         """
          for param in params:
             paramID = self.get_parameter_id( param )
             for day in range(1,3):
@@ -1486,7 +1715,7 @@ class database(object):
 
    # delete bet and the corresponding betdata for a user in a city/tdate
    def delete_bet(self, userID, cityID, tdate):
-      
+
       user = self.get_username_by_id( userID )
       city = self.get_city_name_by_ID( cityID )
       date = utils.tdate2string( tdate )
@@ -1494,13 +1723,14 @@ class database(object):
 
       #check if bet exists
       sql = "SELECT * FROM %swetterturnier_bets WHERE userID=%d AND cityID=%d AND tdate=%d"
-      if cur.execute( sql % (self.prefix, userID, cityID, tdate) ) > 0:
+      sql2 = "SELECT * FROM %swetterturnier_betstat WHERE userID=%d AND cityID=%d AND tdate=%d"
+      if cur.execute( sql % (self.prefix, userID, cityID, tdate) ) > 0 or cur.execute( sql2 % (self.prefix, userID, cityID, tdate) ) > 0:
          sql = "DELETE FROM %swetterturnier_%s WHERE userID=%d AND cityID=%d AND tdate=%d"
          tables = ["bets","betstat"]
          for table in tables:
-	    #print sql % ( self.prefix, table, userID, cityID, tdate )
+            #print sql % ( self.prefix, table, userID, cityID, tdate )
             cur.execute( sql % ( self.prefix, table, userID, cityID, tdate ) )
-	    self.db.commit()
+            self.db.commit()
          for table in tables:
             sql = "SELECT * FROM %swetterturnier_%s WHERE userID=%d AND cityID=%d AND tdate=%d"
             if cur.execute( sql % (self.prefix, table, userID, cityID, tdate) ) > 0:
@@ -1509,10 +1739,10 @@ class database(object):
       else: print "Bet of user %s in city %s from %s does not exist!" % (user, city, date)
 
 
-   # ----------------------------------------------------------------
+   #----------------------------------------------------------------
    # - Close the database 
    # ----------------------------------------------------------------
-   def close(self, verbose=True):
+   def close(self,verbose=False):
       """Simple wrapper around MySQLdb.close.
       
       Args:

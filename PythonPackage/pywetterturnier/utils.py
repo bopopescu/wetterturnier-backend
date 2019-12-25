@@ -63,7 +63,7 @@ def inputcheck(what):
    db        = database.database(config)
    # - Evaluating input arguments from the __main__ script.
    try:
-      opts, args = getopt.getopt(sys.argv[1:], "c:u:t:p:ahi", ["city=", "user=", "tdate=","param=","alldates","help","ignore"])
+      opts, args = getopt.getopt(sys.argv[1:], "c:u:s:t:p:d:n:ahiv", ["city=", "user=", "users=", "tdate=","param=","dates=","filename=","alldates","help","ignore","verbose"])
    except getopt.GetoptError as err:
       print str(err) # will print something like "option -a not recognized"
       usage(what)
@@ -72,12 +72,15 @@ def inputcheck(what):
    inputs = {} # result
    inputs['input_city']      = None
    inputs['input_user']      = None
+   inputs['input_users']     = None
    inputs['input_tdate']     = None
    inputs['input_alldates']  = False 
    inputs['input_param']     = None 
+   inputs['input_dates']     = None
+   inputs['input_filename']  = None
    inputs['input_ignore']    = False
    inputs['input_force']     = False
-   inputs['input_usres']     = None
+   inputs['input_verbose']   = False
 
    # - Overwrite the defaults if inputs are set
    for o, a in opts:
@@ -88,10 +91,10 @@ def inputcheck(what):
       elif o in ("-c", "--city"):
          if len(a) <= 2: a = int(a)
          cities = db.get_cities()
-         print "  * %s active cities" % len(cities)
+         #print "  * %s active cities" % len(cities)
          found  = False
          for i in list(range(len(cities))):
-            print cities[i].values()
+            #print cities[i].values()
             if a in cities[i].values():
                inputs['input_city'] = cities[i]['name']
                found = True
@@ -101,12 +104,17 @@ def inputcheck(what):
             print 'Your input on -c/--city was not recognized.'
             usage(what)
       elif o in ("-u", "--user"):
-         # - Check if is integer (uderID) or string
+         # - Check if is integer (userID) or string
          try:
             user = int(a)
          except:
             user = str(a) 
-         inputs['input_user'] = user 
+         inputs['input_user'] = user
+      elif o in ("-s", "--users"):
+         try:
+            inputs['input_users'] = a.split(",")
+         except:
+            print "Could not convert input to list"; usage(what)
       elif o in ("-f", "--force"):
          inputs['input_force'] = True
       elif o in ("-i", "--ignore"):
@@ -117,7 +125,21 @@ def inputcheck(what):
          try:
             inputs['input_tdate'] = int( a )
          except:
-            print '-t/--tdate input has to be an integer!'; usage(what)
+            try:
+               inputs['input_tdate'] = string2tdate( str(a) )
+            except:
+               print '-t/--tdate input has to be an integer or a datestring (YYYY-MM-DD)!'; usage(what)
+      elif o in ("-d", "--dates"):
+         try:
+            dates = a.split(",")
+            inputs["input_dates"] = (string2tdate( dates[0] ), string2tdate( dates[1] ))
+         except:
+            #TODO: make it possible to enter single dates rather than a range (maybe date1;date2)
+            print '-d/--dates input has to be a list of 2 dates (YYYY-MM-DD,YYYY-MM-DD)!'; usage(what)
+      elif o in ("-n", "--filename"):
+         inputs['input_filename'] = str(a)
+      elif o in ("-v", "--verbose"):
+         inputs['input_verbose'] = True
       else:
          assert False, "unhandled option"
 
@@ -168,13 +190,17 @@ def usage(what=None):
       -u/--user:     A userID or a user_login name. Most 
                      script accept this and compute the points
                      or whatever it is for this user only.
-      -c/--city:     City can be given by its ID, nam
-e or hash
-                     IDs:                                                 %s
-                     names:                                               %s                                                   hashes:                                              %s
+      -s/--users:    A list of user names, seperated by commas, no spaces!
+      -c/--city:     City can be given by its ID, name or hash
+                     IDs:     %s
+                     names:   %s
+                     hashes:  %s
       -a/--alldates  Cannot be combined with the -t/--tdate option.
                      If set loop over all available dates. 
       -t/--tdate:    Tournament date in days since 1970-01-01
+      -p/--param:    A list of paramIDs.
+      -n/--filename  A filename for exporting tables/data.
+      -d/--dates:    A range of dates seperated by ","
       -a/--alldates: ignores -t input. Takes all tournament dates
                      from the database to compute the points.
       -f/--force:    Please DO NOT USE. This was for testing
@@ -505,7 +531,7 @@ def tdate2string( tdate, moses=False ):
    return tdate2datetime( tdate ).strftime( fmt )
 
 
-def string2tdate( datestring, moses=False ):
+def string2tdate( datestring, moses = False ):
     "opposite of the above function"
     from datetime import datetime as dt
 
@@ -605,7 +631,7 @@ def nicename( string, conversion_table = None ):
 # -------------------------------------------------------------------
 # - Customized exit handling
 # -------------------------------------------------------------------
-def exit(msg):
+def exit(msg="unknown error"):
    """Simple exit wrapper.
    Can be used to create kind of user-defined exit handling.
 
