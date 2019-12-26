@@ -1246,20 +1246,19 @@ class database(object):
       cur.execute( sql % ( self.prefix, self.prefix,cityID,tdate,sql_tuple(ignore)) )
       data = cur.fetchall()
 
-      #print data
       if not data:
          return False
       else:
          # - Else prepare the data to compute the Sleepy poins
-         data = []
+         points = []
          for i in data:
             if i[0] == None: continue
-            data.append(float(i[0]))   # store total points to a list
+            points.append(float(i[0]))   # store total points to a list
 
-         if len(data) == 0: return False
+         if len(points) == 0: return False
          else:
             import numpy as np
-            return np.round(np.mean(data)  - np.mean(np.abs(data  - np.mean(data ))),1)
+            return np.round(np.mean(points)  - np.mean(np.abs(points  - np.mean(points))),1)
             #maybe use MAD instead
             #points    = np.round(np.median(data)  - np.mean(np.abs(data  - np.median(data ))),1)
 
