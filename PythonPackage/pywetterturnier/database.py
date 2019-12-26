@@ -16,7 +16,9 @@ import utils
 
 def sql_tuple(IDs):
    """Format a list of integers (IDs) to a tuple fitting the SQL IN(...) statement"""
-   if len(IDs) in [0,1]:
+   if not hasattr(IDs, '__len__') and type(IDs) == int:
+      return "("+str(IDs)+")"
+   elif len(IDs) in [0,1]:
       if len(IDs) == 0: IDs.append(0)
       return str(tuple(IDs))[0:-2]+")"
    else: return tuple(IDs)
@@ -1232,8 +1234,7 @@ class database(object):
          ignore (:obj:`int`): Numeric user ID, ID of the user which should
                               be ignored (e.g., Sleepy's ID).
       Returns:
-         tuple tuple: Tuple tuple as fetched from database. Typically including
-         two tuples, first for Saturday, second for Sunday.
+         float: Sleepy points
       """
 
       cur = self.db.cursor()
@@ -1249,7 +1250,19 @@ class database(object):
       if not data:
          return False
       else:
-         return data
+         # - Else prepare the data to compute the Sleepy poins
+         data = []
+         for i in data:
+            if i[0] == None: continue
+            data.append(float(i[0]))   # store total points to a list
+
+         if len(data) == 0: return False
+         else:
+            import numpy as np
+            return np.round(np.mean(data)  - np.mean(np.abs(data  - np.mean(data ))),1)
+            #maybe use MAD instead
+            #points    = np.round(np.median(data)  - np.mean(np.abs(data  - np.median(data ))),1)
+
 
    #compute statistics out of some wetterturnier tables like betstat
    def get_stats(self, cityID, measures, userID=False, tdate=False, day=0, last_tdate=False, referenz=True, mitteltips=True, aliases=False, typ="sd_logfit", ymax=False, pout=25, pmin=50, midyear=2010, span=False, dates=False, verbose=False):
