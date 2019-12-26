@@ -42,6 +42,26 @@ def CSP(db,config,cities,tdates):
       # - Looping trough dates
       # -------------------------------------------------------------
       for tdate in tdates:
+         # ----------------------------------------------------------------
+         # - Check if we are allowed to perform the computation of the
+         #   mean bets on this date
+         # ----------------------------------------------------------------
+         check = utils.datelock(config,tdate)
+         if check:
+            print '    Date is \'locked\' (datelock). Dont execute, skip.'
+            continue
+
+         # ----------------------------------------------------------
+         # - Which judgingclass do we have to take?
+         #   It is possible that the scoring system changed.
+         # ----------------------------------------------------------
+         #   Take the latest judgingclass changed in 2002-12-06
+         if tdate < 12027:
+            if config['input_ignore']:
+               print '[!] Judginglcass not defined - but started in ignore mode. Skip.'
+               continue
+            else:
+               utils.exit('I dont know which judgingclass I should use for this date. Stop.')
 
          print '    For %s tournament is %s' % (city['name'], utils.tdate2string( tdate ))
 
