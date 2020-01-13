@@ -526,13 +526,32 @@ class getobs( object ):
          float: Returns observed value if loading data was successful
          or None if observation not available or nor recorded.
       """
-
+      import numpy as np
       # - Loading td valid at 12 UTC 
       value = self.load_obs( station.wmo, 12, 'pmsl' )
       # - Original value is in 1/100 hPa. Convert.
+      if value == None:
+         cur = self.db.cursor()
+         sql = "SELECT hoehe, hbaro FROM obs.stations WHERE statnr = %d"
+         cur.execute( sql % station.wmo )
+         data = cur.fetchall()
+         if len(data[0]) > 0:
+            h = data[0][0]
+         else:
+            h = data[0][0]
+         p = self.load_obs( station.wmo, 12, 'psta' )
+         T = self.load_obs( station.wmo, 12, 't' )
+
+         #calculate reduced MSL pressure via international barometric height formula
+         if not (p == None or T == None or h == None):
+            T /= 10.; p /= 10.
+            T += 273.15
+            value = p * ( T / (T + 0.0065*h) )**(-5.255)
+            return value
+
       if not value == None:
-         import numpy as np
-         value = np.round( value/10. ) 
+         value = np.round( value/10. )
+
       # Return value 
       return value
 

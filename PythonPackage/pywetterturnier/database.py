@@ -397,13 +397,13 @@ class database(object):
       desc = cur.description
       data = cur.fetchall()
 
-      from stationclass import *
+      from stationclass import stationclass
       stations = []
 
       for rec in data: stations.append( stationclass( desc, rec, self.db, self.config["mysql_prefix"] ) )
 
       return stations
-
+      #return [stationclass( desc, i, self.db, self.config["mysql_prefix"] ) for i in data]
 
    # -------------------------------------------------------------------
    # - Current tournament
@@ -946,7 +946,7 @@ class database(object):
    #   date where they were used at that time. The point computation
    #   code will skip if there are no data.
    # -------------------------------------------------------------------
-   def get_parameter_names(self, active = False, sort=False):
+   def get_parameter_names(self, active = False, sort=False, cityID=False):
       """Returns all parameter names.
       If input active is set, only active parametres will be returned.
       
