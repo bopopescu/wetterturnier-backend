@@ -59,8 +59,8 @@ if __name__ == '__main__':
    # - If input city set, then drop all other cities.
    if not config['input_city'] == None:
       tmp = []
-      for elem in cities:
-         if elem['name'] == config['input_city']: tmp.append( elem )
+      for i in cities:
+         if i['name'] == config['input_city']: tmp.append( i )
       cities = tmp
 
    # ----------------------------------------------------------------
@@ -84,9 +84,9 @@ if __name__ == '__main__':
          tmp = cur.fetchall()
          data   = []
          points = []
-         for rec in tmp:
-            data.append( [int(rec[0]),float(rec[1]),None] )
-            points.append( float(rec[1]) )
+         for i in tmp:
+            data.append( [int( i[0] ),float( i[1] ),None] )
+            points.append( float( i[1] ) )
 
          # Take unique points and reverse-sort them
          points = np.unique(points)

@@ -124,9 +124,9 @@ if __name__ == '__main__':
       if not x: return np.asarray([])
       tmp = x.split(",")
       res = []
-      for elem in tmp:
+      for i in tmp:
          try:
-            res.append( float(elem) )
+            res.append( float(i) )
          except:
             utils.exit("Problems: %s have to be numeric!" % msg)
       return np.asarray(res)

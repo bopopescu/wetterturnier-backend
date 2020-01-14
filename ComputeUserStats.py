@@ -21,8 +21,8 @@ if __name__ == '__main__':
    # - If input city set, then drop all other cities.
    if not config['input_city'] == None:
       tmp = []
-      for elem in cities:
-         if elem['name'] == config['input_city']: tmp.append( elem )
+      for i in cities:
+         if i['name'] == config['input_city']: tmp.append( i )
       cities = tmp
 
    #userIDs = db.get_all_users()

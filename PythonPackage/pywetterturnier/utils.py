@@ -277,7 +277,8 @@ def readconfig(file='config.conf',inputs=None,conversion_table=None):
       config['migrate_wpconfig']       = CNF.get('migrate','wpconfig')
       tmp = CNF.get('migrate','citytags')
       config['migrate_citytags'] = []
-      for elem in tmp.split(','): config['migrate_citytags'].append(elem.strip())
+      for i in tmp.split(','):
+         config['migrate_citytags'].append( i.strip() )
    except:
       config['migrate_mitspieler'] = False
       config['migrate_groups']     = False
@@ -337,8 +338,8 @@ def readconfig(file='config.conf',inputs=None,conversion_table=None):
    # - Reading all stations
    tmp = CNF.items('stations')
    stn = {}
-   for elem in tmp:
-      stn[elem[0]] = int(elem[1])
+   for i in tmp:
+      stn[ i[0] ] = int( i[1] )
    config['stations']         = stn
 
    # ----------------------------------------------------------------
@@ -419,18 +420,18 @@ class wmowwConversion( object ):
 
         import sys, re
         res = {}
-        for rec in CNF.items(section):
-            name = rec[0].strip()
+        for i in CNF.items(section):
+            name = i[0].strip()
 
-            mtch = re.match("^([0-9]+)\s+gets\s+([0-9]+|None)$",rec[1])
+            mtch = re.match("^([0-9]+)\s+gets\s+([0-9]+|None)$", i[1])
             if not mtch:
-                print "    [!] Misspecified: \"{0:s}\". Ignore.".format(rec)
+                print "    [!] Misspecified: \"{0:s}\". Ignore.".format(i)
                 continue
             # Use integer key as string key
             if mtch.group(2) == "None":     val = None
             else:                           val = int(mtch.group(2))
             # Append Result
-            res[mtch.group(1)] = {"name":rec[0].strip(), "gets":val}
+            res[mtch.group(1)] = {"name" : i[0].strip(), "gets" : val}
 
         return res
 

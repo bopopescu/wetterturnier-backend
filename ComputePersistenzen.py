@@ -45,8 +45,8 @@ if __name__ == '__main__':
    # - If input city set, then drop all other cities.
    if not config['input_city'] == None:
       tmp = []
-      for elem in cities:
-         if elem['name'] == config['input_city']: tmp.append( elem )
+      for i in cities:
+         if i['name'] == config['input_city']: tmp.append( i )
       cities = tmp
 
 
@@ -64,8 +64,8 @@ if __name__ == '__main__':
       # -------------------------------------------------------------
       def remove_bool_from_list( x ):
          res = []
-         for elem in x:
-            if not isinstance(elem,bool):
+         for i in x:
+            if not isinstance(i, bool):
                res.append( elem )
          return res
 

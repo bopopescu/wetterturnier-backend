@@ -35,8 +35,7 @@ class stationclass( object ):
       """ 
 
       # - Prepare cols
-      cols = []
-      for rec in desc: cols.append( str(rec[0]) )
+      cols = [str( i[0] ) for i in desc]
 
       ## Station ID in the database. 
       self.ID         = None 
@@ -112,8 +111,7 @@ class stationclass( object ):
       # Fetching parameter ID's of active parameters (given tdate)
       cur = self.db.cursor()
       cur.execute( " ".join(sql) )
-      paramIDs  = []
-      for rec in cur.fetchall(): paramIDs.append(int(rec[0]))
+      paramIDs = [int( i[0] ) for i in cur.fetchall()]
       paramIDs.sort()
       return paramIDs
 

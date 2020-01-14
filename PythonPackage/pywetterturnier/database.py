@@ -87,11 +87,7 @@ class database(object):
          sql.append("AND bet.submitted IS NOT NULL")
          cur.execute( "\n".join(sql) )
 
-      data = cur.fetchall()
-      res = []
-      for i in data: res.append( int(i[0]) )
-      
-      return res
+      return [int( i[0] ) for i in data]
 
    # ----------------------------------------------------------------
    # ----------------------------------------------------------------
@@ -172,7 +168,7 @@ class database(object):
             self.config['mysql_db'],self.config['mysql_prefix'],table)
       cur.execute(sql)
       res = cur.fetchone()
-      if int(res[0]) == 0:
+      if int( res[0] ) == 0:
          return False
       else:
          return True
@@ -343,11 +339,7 @@ class database(object):
       if len(data) == 0:
          utils.exit('Cannot load city data from database in database.current_tournament')
       
-      res = []
-      for elem in data:
-         res.append( {'ID':int(elem[0]),'name':str(elem[1]),'hash':str(elem[2])} )
-      
-      return res
+      return [ { 'ID' : int(i[0]), 'name' : str(i[1]), 'hash' : str(i[2]) } for i in data]
 
    def get_city_names(self):
       """Loading city information from the database.
@@ -368,11 +360,7 @@ class database(object):
       if len(data) == 0:
          utils.exit('Cannot load city data from database in database.current_tournament')
       
-      res = []
-      for elem in data:
-         res.append( elem[0] )
-      
-      return res
+      return [i[0] for i in data]
 
    # -------------------------------------------------------------------
    # - Loading stations from database for a given city
@@ -398,12 +386,8 @@ class database(object):
       data = cur.fetchall()
 
       from stationclass import stationclass
-      stations = []
 
-      for rec in data: stations.append( stationclass( desc, rec, self.db, self.config["mysql_prefix"] ) )
-
-      return stations
-      #return [stationclass( desc, i, self.db, self.config["mysql_prefix"] ) for i in data]
+      return [stationclass( desc, i, self.db, self.config["mysql_prefix"] ) for i in data]
 
    # -------------------------------------------------------------------
    # - Current tournament
@@ -473,12 +457,10 @@ class database(object):
       cur = self.cursor()
       cur.execute( sql )
       data = cur.fetchall()
-      tdates = []
-      for elem in data: tdates.append( elem[0] )
-      tdates.sort()
+      tdates = [i[0] for i in data]
       print '    Found %d different dates' % len(tdates)
 
-      return tdates
+      return tdates.sort()
 
    # -------------------------------------------------------------------
    # - Given an ID this method returns the city name.
@@ -558,7 +540,7 @@ class database(object):
 
       # - If there is a userID on self.config['input_user']:
       #   only return the data for this user!
-      if type(self.config['input_user']) == type(int()):
+      if type(self.config['input_user']) == int:
          sql += ' AND userID = %d' % self.config['input_user']
 
       # - Only compute points where points are NULL
@@ -584,13 +566,13 @@ class database(object):
          betdate = []
          # Values to update the database
          values = []
-         for elem in data:
-            userID.append(  int(elem[0]) )  
-            cityID.append(  int(elem[1]) )  
-            paramID.append( int(elem[2]) )  
-            tdate.append(   int(elem[3]) )  
-            betdate.append( int(elem[4]) )
-            values.append(  int(elem[5]) )
+         for i in data:
+            userID.append(  int( i[0] ))
+            cityID.append(  int( i[1] ))
+            paramID.append( int( i[2] ))
+            tdate.append(   int( i[3] ))
+            betdate.append( int( i[4] ))
+            values.append(  int( i[5] ))
          return userID, cityID, paramID, tdate, betdate, values
 
    # -------------------------------------------------------------------
@@ -667,9 +649,8 @@ class database(object):
          #   is included into the computation of the Persistenz.
          ref = self.get_group_id('Referenztipps')
          cur.execute( 'SELECT userID FROM %swetterturnier_groupusers WHERE groupID = %d' % (self.prefix, ref) )
-         tmp = cur.fetchall()
-         ref = [];
-         for rec in tmp: ref.append('AND bet.userID != %d' % rec[0] )
+         data = cur.fetchall()
+         ref = [i[0] for i in data]
          # - Create final statement
          sql = []
          sql.append("SELECT bet.value AS value FROM %swetterturnier_bets AS bet" % self.prefix)
@@ -748,10 +729,9 @@ class database(object):
          if typ == 'human':
             ref = self.get_group_id('Automaten')
             cur.execute( 'SELECT userID FROM %swetterturnier_groupusers WHERE groupID = %d' % (self.prefix, ref) )
-            tmp = cur.fetchall()
-            ref = [];
-            for rec in tmp:
-               ref.append('AND bet.userID != %d' % rec[0] )
+            data = cur.fetchall()
+            ref = [i[0] for i in data]
+            
             sql.append("AND bet.userID NOT IN (%d,%d,%d,%d,%d)" % (deadID,PetrusID,MosesID,DonnerstagID,FreitagID))
             sql.append(" ".join(ref)) 
          else:
@@ -933,9 +913,7 @@ class database(object):
       if not data:
          return False
       elif wmo == None:
-         res = []
-         for elem in data: res.append( elem[0] )
-         return res
+         return [i[0] for i in data]
       else:
          return data[0][0]
 
@@ -968,9 +946,7 @@ class database(object):
       if not data:
          return False
       else:
-         res = []
-         for elem in data: res.append( elem[0] )
-         return res
+         return [i[0] for i in data]
 
 
    # -------------------------------------------------------------------
@@ -992,7 +968,7 @@ class database(object):
       if not data:
          return False
       else:
-         return int(data[0])
+         return int( data[0] )
 
    
    # -------------------------------------------------------------------
@@ -1044,7 +1020,7 @@ class database(object):
          if data == None:
             continue
          else:
-            return int(data[0])         
+            return int( data[0] )         
 
 
    # -------------------------------------------------------------------
@@ -1090,10 +1066,7 @@ class database(object):
       if not data:
          return False
       else:
-         res = []
-         for i in data:
-            res.append(int(i[0]))
-         return res
+         return [int( i[0] ) for i in data]
 
 
    def get_groups(self, active=False):
@@ -1109,10 +1082,7 @@ class database(object):
       data = cur.fetchall()
 
       # - Make nice list
-      res = [];
-      for elem in data: res.append(elem[0])
-
-      return res
+      return [i[0] for i in data]
 
    # -------------------------------------------------------------------
    # - Returning only active groups 
@@ -1165,10 +1135,7 @@ class database(object):
          data = cur.fetchall()
          
          # - Make nice list
-         res = [];
-         for elem in data: res.append(elem[0])
-
-         return res
+         return [i[0] for i in data]
 
    # -------------------------------------------------------------------
    # - Create a groupuser (add user to group as a member)
@@ -1310,13 +1277,12 @@ class database(object):
             cur.execute( sql2 % ( self.prefix, cityID ) )
             data = cur.fetchall()
             for i in measures:
-               parts = []
-               for j in data:
-                  parts.append( int(j[0]) )
+               parts = [int( j[0] ) for j in data]
+
                if len(parts) == 0: continue
                elif i == "mean_part": res[i] = np.mean( parts )
-               elif i == "max_part": res[i] = max( parts )
-               elif i == "min_part": res[i] = min( parts )
+               elif i == "max_part": res[i] = np.max( parts )
+               elif i == "min_part": res[i] = np.min( parts )
                elif i == "tdates": res[i] = len( parts )
 
             sql += "cityID=%d AND userID NOT IN%s" + last_tdate_str
@@ -1343,22 +1309,6 @@ class database(object):
                               userIDs.append( userID )
                if verbose: print userIDs
 
-         """
-         if not sleepyID in userIDs:
-         #if we would use this code, sleepy gets 0 stats. does it make a difference? if not, remove!
-         
-         #again only if a user actually participated on tdate we add his points to the stats
-         sql2 = "SELECT tdate FROM %swetterturnier_bets WHERE userID IN%s AND cityID=%d"
-         #print sql2 % ( self.prefix, sql_tuple(userIDs), cityID )
-         cur.execute( sql2 % ( self.prefix, sql_tuple(userIDs), cityID ) )
-         data2 = cur.fetchall()
-         tdates = []
-         for i in data2:
-            if i[0] not in tdates: tdates.append( int(i[0]) )
-
-         sql += "userID IN%s AND cityID=%d AND tdate IN%s" + last_tdate_str
-         cur.execute( sql % ( self.prefix, sql_tuple(userIDs), cityID, sql_tuple(tdates) ) )
-         """
          sql += "userID IN%s AND cityID=%d" + last_tdate_str
          cur.execute( sql % ( self.prefix, sql_tuple(userIDs), cityID ) )
 
@@ -1504,12 +1454,12 @@ class database(object):
                   K = 1.
                else:
                   K = parts / pmin
-               res[i] = round(K * np.mean(points_adj), 4)
+               res[i] = np.round(K * np.mean(points_adj), 4)
                if "sd_" in typ: res[i]*=1000
                elif typ == "median_fit": res[i]*=100
 
          elif i == "mean"+day_str:
-            res[i] = round(np.mean(points), 1)
+            res[i] = np.round(np.mean(points), 1)
          elif i == "median"+day_str:
             res[i] = np.median(points)
          elif i == "Qlow"+day_str:
@@ -1517,9 +1467,9 @@ class database(object):
          elif i == "Qupp"+day_str:
             res[i] = Qupp(points)
          elif i == "max"+day_str:
-            res[i] = max(points)
+            res[i] = np.max(points)
          elif i == "min"+day_str:
-            res[i] = min(points)
+            res[i] = np.min(points)
          elif i == "sd"+day_str: #standard deviation
             sd = np.std(points)
             if np.isnan(sd): res[i] = 0
@@ -1666,11 +1616,7 @@ class database(object):
       cur.execute( sql % ( self.prefix, cityID, tdate, exclude ) )
       data = cur.fetchall()
 
-      res = []
-      for i in data:
-         if i[0] not in res:
-            res.append( int(i[0]) )
-      return res
+      return [int( i[0] ) for i in data]
 
 
    def find_missing_obs(self, cityID, tdate=False ):

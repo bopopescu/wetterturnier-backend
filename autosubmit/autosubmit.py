@@ -123,8 +123,8 @@ class read_file_content( object ):
       # - Now reading parameters
       self.data = {}
       params = CNF.items('parameters')
-      for rec in params:
-         self.data[rec[0]] = CNF.getfloat('parameters',rec[0])
+      for i in params:
+         self.data[ i[0] ] = CNF.getfloat('parameters', i[0])
 
       # - Create options string
       self.args = "city=%s&user=%s&password=%s" % (self.city,self.user,self.password)

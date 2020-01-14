@@ -166,10 +166,9 @@ class getobs( object ):
       sql = "SHOW COLUMNS FROM %s" % table
       cur = self.db.cursor()
       cur.execute(sql)
-      tmp = cur.fetchall()
-      res = []
-      for rec in tmp: res.append( str(rec[0]).lower() )
-      return res
+      data = cur.fetchall()
+
+      return [str( i[0] ).lower() for i in data]
 
    # ----------------------------------------------------------------
    # - Loading observations
@@ -271,20 +270,19 @@ class getobs( object ):
 
       cur = self.db.cursor()
       cur.execute( sql )
-      tmp = cur.fetchall()
+      data = cur.fetchall()
 
       # Keep non-None values
-      data = []
-      for rec in tmp:
-         if rec[0] is None: continue
-         data.append( int(rec[0]) )
+      res = []
+      for i in data:
+         if i[0] is None: continue
+         res.append( int( i[0] ) )
 
-      # Return 'None' if no data have been found or a list
-      # of integers else.
-      if len(data) == 0:
+      # Return 'None' if no result has been found or a list of integers else.
+      if len(res) == 0:
          return None
       else:
-         return data
+         return res
 
 
 
@@ -698,18 +696,16 @@ class getobs( object ):
 
       # - New object to store the values (from all sql queries)
       data = []
-      def append_data(data,tmp):
-         for rec in tmp:  data.append( rec[0] )
+
+      def append_data(data, tmp):
+         for i in tmp:  data.append( i[0] )
          return data
 
-      # - FFX (last 10 min gusts) 
-      cur.execute( sql  );     tmp = cur.fetchall();     data = append_data( data, tmp )
-      # - FFX1 (last 1 h gusts) 
-      cur.execute( sql1 );     tmp = cur.fetchall();     data = append_data( data, tmp )
-      # - FFX1 (last 3 h gusts) 
-      cur.execute( sql3 );     tmp = cur.fetchall();     data = append_data( data, tmp )
-      # - FFX1 (last 6 h gusts) 
-      cur.execute( sql6 );     tmp = cur.fetchall();     data = append_data( data, tmp )
+      for sql in [sql, sql1, sql3, sql6]:
+         # - FFX [10 min, 1 h, 3 h, 6 h]
+         cur.execute( sql  )
+         tmp = cur.fetchall()
+         data = append_data( data, tmp )
 
       # - Check if +30 h observation is available.
       check30 = self.check_record( station.wmo, 30 )
@@ -729,7 +725,7 @@ class getobs( object ):
       else:
          value = 0
          import numpy as np
-         for rec in data: value = np.maximum(value,rec) 
+         for i in data: value = np.maximum(value, i) 
          # - Convert from meters per second to knots.
          #   Moreover, if knots are below 25, ignore.
          value = np.round( np.float( value ) * 1.94384449 / 10. ) * 10
@@ -1200,16 +1196,15 @@ class getobs( object ):
 
                   cur = self.db.cursor()
                   cur.execute( sql )
-                  tmp = cur.fetchall()
+                  data = cur.fetchall()
                   # - No data? Return None 
-                  if len(tmp) == 0 or tmp == None:
+                  if len(data) == 0 or data == None:
                      return None
                   else:
                      # - Else sum up
-                     value = 0
-                     for rec in tmp:
-                        value += int(rec[0])
-                     value = int( np.round(np.float(value)/np.float(self._maxSd_[station.wmo]) * 100) ) * 10
+                     value = sum([int( i[0] ) for i in data])
+
+                     value = int( np.round(np.float(value) / np.float(self._maxSd_[station.wmo]) * 100) ) * 10
 	       # Else we report None 
                else: value = None
 
@@ -1232,8 +1227,8 @@ class getobs( object ):
 
       # - Else show data
       allcols = []
-      for rec in self.data:
-         for k in self.data[rec].keys():
+      for i in self.data:
+         for k in self.data[i].keys():
             if not k in allcols: allcols.append(k)
       allcols.sort()
 

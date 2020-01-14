@@ -50,8 +50,8 @@ if __name__ == '__main__':
          import moses as m
          #execute moses.f90 programm for each cities to keep coefs up to date once a week
          print_moses( db, config, cities, tdates ) 
-         for c in cities:
-            m.moses.processmoses(c['hash'])
+         for i in cities:
+            m.moses.processmoses( i['hash'] )
 
    else:
       tdates     = [config['input_tdate']]
@@ -61,8 +61,8 @@ if __name__ == '__main__':
    # - If input city set, then drop all other cities.
    if not config['input_city'] == None:
       tmp = []
-      for elem in cities:
-         if elem['name'] == config['input_city']: tmp.append( elem )
+      for i in cities:
+         if i['name'] == config['input_city']: tmp.append( i )
       cities = tmp
 
    # - If moses directory does not exist:

@@ -72,10 +72,10 @@ if __name__ == '__main__':
 
    # - Now calling the other scripts using the necessary
    #   input arguments.
-   for rec in rerun:
-      tdate    = int(rec[0])
+   for re in rerun:
+      tdate    = int( re[0] )
       tdatestr = dt.fromtimestamp(tdate*86400).strftime("%Y-%m-%d") 
-      cityID   = int(rec[1])
+      cityID   = int( re[1] )
 
       city     = db.get_city_name_by_ID( cityID )
       if not city:
