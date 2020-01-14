@@ -87,7 +87,7 @@ class database(object):
          sql.append("AND bet.submitted IS NOT NULL")
          cur.execute( "\n".join(sql) )
 
-      return [int( i[0] ) for i in data]
+      return [int( i[0] ) for i in cur.fetchall()]
 
    # ----------------------------------------------------------------
    # ----------------------------------------------------------------
@@ -383,11 +383,10 @@ class database(object):
       cur = self.db.cursor()
       cur.execute( sql )
       desc = cur.description
-      data = cur.fetchall()
 
       from stationclass import stationclass
 
-      return [stationclass( desc, i, self.db, self.config["mysql_prefix"] ) for i in data]
+      return [stationclass( desc, i, self.db, self.config["mysql_prefix"] ) for i in cur.fetchall()]
 
    # -------------------------------------------------------------------
    # - Current tournament
@@ -456,8 +455,7 @@ class database(object):
 
       cur = self.cursor()
       cur.execute( sql )
-      data = cur.fetchall()
-      tdates = [i[0] for i in data]
+      tdates = [i[0] for i in cur.fetchall()]
       print '    Found %d different dates' % len(tdates)
 
       return tdates.sort()
@@ -559,13 +557,7 @@ class database(object):
          return False, False
       else:
          # Elements required for the unique key (for the update)
-         userID = []
-         cityID = []
-         paramID = []
-         tdate = []
-         betdate = []
-         # Values to update the database
-         values = []
+         userID, cityID, paramID, tdate, betdate, values = [[] for _ in range(6)]
          for i in data:
             userID.append(  int( i[0] ))
             cityID.append(  int( i[1] ))
@@ -649,8 +641,7 @@ class database(object):
          #   is included into the computation of the Persistenz.
          ref = self.get_group_id('Referenztipps')
          cur.execute( 'SELECT userID FROM %swetterturnier_groupusers WHERE groupID = %d' % (self.prefix, ref) )
-         data = cur.fetchall()
-         ref = [i[0] for i in data]
+         ref = [i[0] for i in cur.fetchall()]
          # - Create final statement
          sql = []
          sql.append("SELECT bet.value AS value FROM %swetterturnier_bets AS bet" % self.prefix)
@@ -729,8 +720,7 @@ class database(object):
          if typ == 'human':
             ref = self.get_group_id('Automaten')
             cur.execute( 'SELECT userID FROM %swetterturnier_groupusers WHERE groupID = %d' % (self.prefix, ref) )
-            data = cur.fetchall()
-            ref = [i[0] for i in data]
+            ref = [i[0] for i in cur.fetchall()]
             
             sql.append("AND bet.userID NOT IN (%d,%d,%d,%d,%d)" % (deadID,PetrusID,MosesID,DonnerstagID,FreitagID))
             sql.append(" ".join(ref)) 
@@ -1079,10 +1069,9 @@ class database(object):
       sql = 'SELECT groupName FROM %swetterturnier_groups'
       if active: sql += ' WHERE active = 1'
       cur.execute(sql % self.prefix)
-      data = cur.fetchall()
 
       # - Make nice list
-      return [i[0] for i in data]
+      return [i[0] for i in cur.fetchall()]
 
    # -------------------------------------------------------------------
    # - Returning only active groups 
@@ -1132,10 +1121,9 @@ class database(object):
          if active: sql+=' AND active=1'
          if sort: sql+=' ORDER BY sort'
          cur.execute(sql % (self.prefix, groupID))
-         data = cur.fetchall()
          
          # - Make nice list
-         return [i[0] for i in data]
+         return [i[0] for i in cur.fetchall()]
 
    # -------------------------------------------------------------------
    # - Create a groupuser (add user to group as a member)
@@ -1275,9 +1263,9 @@ class database(object):
          elif cityID:
             sql2 = "SELECT part FROM %swetterturnier_tdatestats WHERE cityID=%d" + last_tdate_str
             cur.execute( sql2 % ( self.prefix, cityID ) )
-            data = cur.fetchall()
+            
             for i in measures:
-               parts = [int( j[0] ) for j in data]
+               parts = [int( j[0] ) for j in cur.fetchall()]
 
                if len(parts) == 0: continue
                elif i == "mean_part": res[i] = np.mean( parts )
@@ -1501,8 +1489,7 @@ class database(object):
             sql = "SELECT points"+day_str+" from %swetterturnier_betstat WHERE tdate=%d AND cityID=%d AND points"+day_str+" > %f"
             print sql % (self.prefix, tdate, cityID, median)
             cur.execute( sql % (self.prefix, tdate, cityID, median) )
-            data = cur.fetchall()
-            x = [j[0] for j in data]
+            x = [j[0] for j in cur.fetchall()]
             print x
             #Q3 = res["Qupp"+day_str]
             #sd = sd_c(x, center=Q3)
@@ -1614,9 +1601,8 @@ class database(object):
          sql = "SELECT userID FROM %swetterturnier_bets WHERE cityID=%d AND tdate=%d AND userID NOT IN%s"
       
       cur.execute( sql % ( self.prefix, cityID, tdate, exclude ) )
-      data = cur.fetchall()
 
-      return [int( i[0] ) for i in data]
+      return [int( i[0] ) for i in cur.fetchall()]
 
 
    def find_missing_obs(self, cityID, tdate=False ):
@@ -1710,13 +1696,3 @@ class database(object):
 
       if verbose: print '  * Close database'
       self.db.close()
-
-
-
-
-
-
-
-
-
-

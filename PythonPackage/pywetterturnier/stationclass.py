@@ -107,7 +107,6 @@ class stationclass( object ):
       sql.append("THEN 1 ELSE 0 END AS active FROM {0:s}wetterturnier_stationparams WHERE".format(self.dbprefix))
       sql.append("stationID = {0:d}) AS tmp WHERE active = 1;".format(int(self.ID)))
 
-
       # Fetching parameter ID's of active parameters (given tdate)
       cur = self.db.cursor()
       cur.execute( " ".join(sql) )
@@ -132,6 +131,3 @@ class stationclass( object ):
       print "    - Station name:         %s" % self.name
       print "    - City ID:              %d" % self.cityID
       print "    - Last changed:         %s" % self.changed.strftime('%Y-%m-%d %H:%M')
-      
-
-

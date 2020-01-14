@@ -166,9 +166,8 @@ class getobs( object ):
       sql = "SHOW COLUMNS FROM %s" % table
       cur = self.db.cursor()
       cur.execute(sql)
-      data = cur.fetchall()
 
-      return [str( i[0] ).lower() for i in data]
+      return [str( i[0] ).lower() for i in cur.fetchall()]
 
    # ----------------------------------------------------------------
    # - Loading observations
@@ -313,10 +312,9 @@ class getobs( object ):
             (self._table_, wmo, datumsec )
       cur = self.db.cursor()
       cur.execute( sql )
-      data = cur.fetchone()
 
       # - Else return value
-      return (int(data[0]) > 0)
+      return (int( cur.fetchone()[0] ) > 0)
 
 
    # ----------------------------------------------------------------
@@ -698,7 +696,8 @@ class getobs( object ):
       data = []
 
       def append_data(data, tmp):
-         for i in tmp:  data.append( i[0] )
+         for i in tmp:
+            data.append( i[0] )
          return data
 
       for sql in [sql, sql1, sql3, sql6]:
@@ -1271,9 +1270,8 @@ class getobs( object ):
       data = []
 
       param = {}
-      for p in self.db.get_parameter_names():
-         id = self.db.get_parameter_id( p )
-         param[p] = id
+      for i in self.db.get_parameter_names():
+         param[i] = self.db.get_parameter_id( i )
 
       # - Prepare a few sql statements we need later 
       sql_check  = "SELECT placedby FROM %swetterturnier_obs " % self.db.prefix + \
@@ -1422,25 +1420,3 @@ class getobs( object ):
             
          # Convert the new proper date/time into a datetime object
          return dt.datetime.strptime(date,"%Y-%m-%d %H:%M") 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

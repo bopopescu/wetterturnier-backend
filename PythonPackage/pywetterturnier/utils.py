@@ -642,6 +642,3 @@ def exit(msg="unknown error"):
 
    import sys
    sys.exit('[!] ERROR: %s' % msg)
-
-
-
