@@ -28,7 +28,7 @@ class stationclass( object ):
          function self._has_db_connector_ can be used to check if the
          database handler has been set or not.
    """
-   print "check"
+   print("check")
    #WHY the fuck did need to add a print here for the next line 2 work?!?!?!
    def __init__( self, desc, data, db = None, dbprefix = None ):
       """Initializing a new stationclss object.
@@ -125,9 +125,9 @@ class stationclass( object ):
       from datetime import datetime as dt
       import json
 
-      print "    Show station-object settings:"
-      print "    - Station ID:           %d" % self.ID
-      print "    - WMO station number:   %d" % self.wmo
-      print "    - Station name:         %s" % self.name
-      print "    - City ID:              %d" % self.cityID
-      print "    - Last changed:         %s" % self.changed.strftime('%Y-%m-%d %H:%M')
+      print("    Show station-object settings:")
+      print("    - Station ID:           %d" % self.ID)
+      print("    - WMO station number:   %d" % self.wmo)
+      print("    - Station name:         %s" % self.name)
+      print("    - City ID:              %d" % self.cityID)
+      print("    - Last changed:         %s" % self.changed.strftime('%Y-%m-%d %H:%M'))

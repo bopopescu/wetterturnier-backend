@@ -25,7 +25,7 @@ def CSP(db,config,cities,tdates):
    import sys, os
    import numpy as np
    from pywetterturnier import utils
-   print '\n  * Compute sum points to fill betstat table'
+   print('\n  * Compute sum points to fill betstat table')
 
    # ----------------------------------------------------------------
    # - Now going over the cities and compute the points. 
@@ -48,7 +48,7 @@ def CSP(db,config,cities,tdates):
          # ----------------------------------------------------------------
          check = utils.datelock(config,tdate)
          if check:
-            print '    Date is \'locked\' (datelock). Dont execute, skip.'
+            print('    Date is \'locked\' (datelock). Dont execute, skip.')
             continue
 
          # ----------------------------------------------------------
@@ -58,12 +58,12 @@ def CSP(db,config,cities,tdates):
          #   Take the latest judgingclass changed in 2002-12-06
          if tdate < 12027:
             if config['input_ignore']:
-               print '[!] Judginglcass not defined - but started in ignore mode. Skip.'
+               print('[!] Judginglcass not defined - but started in ignore mode. Skip.')
                continue
             else:
                utils.exit('I dont know which judgingclass I should use for this date. Stop.')
 
-         print '    For %s tournament is %s' % (city['name'], utils.tdate2string( tdate ))
+         print('    For %s tournament is %s' % (city['name'], utils.tdate2string( tdate )))
 
          # - If config['input_user'] is an integer value this
          #   is a userID. Compute the sum points for this user
@@ -98,7 +98,7 @@ def CSP(db,config,cities,tdates):
                     'AND p.cityID = d2.cityID ' + \
                     ''
 
-         print '    - Reading data from database'
+         print('    - Reading data from database')
          cur = db.cursor()
          cur.execute( sql_full )
          desc = cur.description
@@ -106,10 +106,10 @@ def CSP(db,config,cities,tdates):
 
          # Now compute 
          if len(data) == 0:
-            print '    - Sorry, got no data to compute sum points'
+            print('    - Sorry, got no data to compute sum points')
          else:
             # Else: we have data, update database
-            print '    - Upserting database (%d lines)' % len(data)
+            print('    - Upserting database (%d lines)' % len(data))
 
             # Require the index of the "points" variable
             points_idx = None

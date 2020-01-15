@@ -42,11 +42,14 @@ setup(name='pywetterturnier',     # This is the package name
       packages=['pywetterturnier'],
       install_requires=[
           'numpy',
-          'MySQL-python', # MySQL connection
+          #'MySQL-python', # MySQL connection
+          #MySQL-python not supported anymore in python3!
+          'mysqlclient',
           'importlib',    # Used to load the judgingclasses dynamically
           'pytz',         # Required by astral
           'astral',       # Used to compute astronomic sunshine duration
           'pandas',       # exporting data frames
-          'xlwt'          # to excel (.xls)
+          'xlwt',         # to excel (.xls)
+          'ConfigParser'  # for config files
       ],
       czip_safe=False)

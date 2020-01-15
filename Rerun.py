@@ -46,7 +46,7 @@ if __name__ == '__main__':
    db = database.database(config)
 
    if not db.check_if_table_exists("wetterturnier_rerunrequest"):
-      print "[!] Table wetterturnier_rerunrequest does not exist, stop here."
+      print("[!] Table wetterturnier_rerunrequest does not exist, stop here.")
       db.close(); sys.exit(9)
 
    # - Check whether there are any rerun requests
@@ -56,7 +56,7 @@ if __name__ == '__main__':
    rerun = cur.fetchall()
 
    if len(rerun) == 0:
-      print "   There are no rerun requests, stop here."; sys.exit(0)
+      print("   There are no rerun requests, stop here."); sys.exit(0)
    
    # - Compute the Points for all the dudes first
    import subprocess as sub
@@ -79,10 +79,10 @@ if __name__ == '__main__':
 
       city     = db.get_city_name_by_ID( cityID )
       if not city:
-         print "[!] OUPS! Cannot find city {0:d} in database!".format(cityID)
+         print("[!] OUPS! Cannot find city {0:d} in database!".format(cityID))
 
-      print "  * Rerun for tournament date {0:d} ({1:s})".format(tdate,tdatestr)
-      print "    Run computation for city {0:s} ({1:d})".format(city,cityID)
+      print("  * Rerun for tournament date {0:d} ({1:s})".format(tdate,tdatestr))
+      print("    Run computation for city {0:s} ({1:d})".format(city,cityID))
 
       # Run the scripts in the correct order
       for script in scripts:
@@ -98,7 +98,7 @@ if __name__ == '__main__':
          p1 = sub.Popen(cmd,stderr=sub.PIPE)
          err = p1.communicate()
          if not p1.returncode == 0:
-            for line in err: print '%s\n' % line
+            for line in err: print('%s\n' % line)
             utils.exit('ERROR WHILE RUNNING %s AS SUBPROCESS FOR DATE %d CITY %s' % (script,tdate,city))
 
 

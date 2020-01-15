@@ -51,11 +51,11 @@ if __name__ == '__main__':
    is_latest_tournament = False
    if config['input_tdate'] == None:
       config['input_tdate'] = db.current_tournament()
-      print '  * Using latest tournament date: %d' % config['input_tdate']
+      print('  * Using latest tournament date: %d' % config['input_tdate'])
       is_latest_tournament = True
    else:
       #utils.exit('Sorry, need explicit -t/--tdate input for this script')
-      print '  * Using input tdate: %d' % config['input_tdate']
+      print('  * Using input tdate: %d' % config['input_tdate'])
 
    # - If input_user was given as string we have to find the
    #   corresponding userID first!
@@ -104,7 +104,7 @@ if __name__ == '__main__':
       p1 = sub.Popen(cmd,stderr=sub.PIPE)
       err = p1.communicate()
       if not p1.returncode == 0:
-         for line in err: print '%s\n' % line
+         for line in err: print('%s\n' % line)
          utils.exit('ERROR WHILE RUNNING %s AS SUBPROCESS FOR DATE %d' % (script,config['input_tdate']))
 
 

@@ -39,7 +39,7 @@ if __name__ == '__main__':
       tdates     = [db.current_tournament()]
    else:
       tdates     = [config['input_tdate']]
-      print tdates
+      print(tdates)
    # - Loading all different cities (active cities)
    cities     = db.get_cities()
    # - If input city set, then drop all other cities.
@@ -51,7 +51,7 @@ if __name__ == '__main__':
 
 
    for i,j in zip( ["Donnerstag","Freitag"], [1,0] ):
-      print i, j
+      print(i, j)
       # ----------------------------------------------------------------
       # - Prepare the Persistenz
       # ----------------------------------------------------------------
@@ -78,7 +78,7 @@ if __name__ == '__main__':
          # - Using obervations of the tournament day for our Persistenz player
          tdate_str = dt.fromtimestamp( tdate-j * 86400 ).strftime('%a, %Y-%m-%d')
 
-         print "    Searching for Observations:     %s (%d)" % (tdate_str, tdate-j)
+         print("    Searching for Observations:     %s (%d)" % (tdate_str, tdate-j))
 
          # ----------------------------------------------------------------
          # - Check if we are allowed to perform the computation of the
@@ -86,21 +86,21 @@ if __name__ == '__main__':
          # ----------------------------------------------------------------
          check = utils.datelock(config,tdate-j)
          if check:
-            print '    Date is \'locked\' (datelock). Dont execute, skip.'
+            print('    Date is \'locked\' (datelock). Dont execute, skip.')
             continue
 
          # ----------------------------------------------------------------
          # - Compute mitteltip mean of all stations of each city... 
          # ----------------------------------------------------------------
          for city in cities:
-            print '\n  * Compute the %s for city %s (ID: %d)' % (username,city['name'], city['ID'])
+            print('\n  * Compute the %s for city %s (ID: %d)' % (username,city['name'], city['ID']))
             
             # - bit hacky: go 1 day back in mitteltip function to get obs
             #   instead of user bets like in Petrus. typ='persistenz' for db
             #   idea: we could also take thursday's obs for saturday and
             #   fridays tip for sunday, or even saturday's for sunday...
             bet = mitteltip.mitteltip(db,'persistenz',False,city,tdate-j)
-            print bet 
+            print(bet) 
             # - If bet is False, continue
             if bet == False: continue
             
@@ -109,8 +109,8 @@ if __name__ == '__main__':
             #   but have to store for two days (saturday, sunday). Therefore
             #   there is the day-loop here.
             for day in range(1,3):
-               print "    Insert Persistenz bets into database for day %d" % day
-               for k in bet[day-1].keys():
+               print("    Insert Persistenz bets into database for day %d" % day)
+               for k in list(bet[day-1].keys()):
                   paramID = db.get_parameter_id(k)
                   db.upsert_bet_data(userID,city['ID'],paramID,tdate,day,bet[day-1][k])
 

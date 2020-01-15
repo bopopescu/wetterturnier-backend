@@ -65,7 +65,7 @@ def inputcheck(what):
    try:
       opts, args = getopt.getopt(sys.argv[1:], "c:u:s:t:p:d:n:ahiv", ["city=", "user=", "users=", "tdate=","param=","dates=","filename=","alldates","help","ignore","verbose"])
    except getopt.GetoptError as err:
-      print str(err) # will print something like "option -a not recognized"
+      print(str(err)) # will print something like "option -a not recognized"
       usage(what)
 
 
@@ -95,13 +95,13 @@ def inputcheck(what):
          found  = False
          for i in list(range(len(cities))):
             #print cities[i].values()
-            if a in cities[i].values():
+            if a in list(cities[i].values()):
                inputs['input_city'] = cities[i]['name']
                found = True
             else:
                continue
          if not found:
-            print 'Your input on -c/--city was not recognized.'
+            print('Your input on -c/--city was not recognized.')
             usage(what)
       elif o in ("-u", "--user"):
          # - Check if is integer (userID) or string
@@ -114,7 +114,7 @@ def inputcheck(what):
          try:
             inputs['input_users'] = a.split(",")
          except:
-            print "Could not convert input to list"; usage(what)
+            print("Could not convert input to list"); usage(what)
       elif o in ("-f", "--force"):
          inputs['input_force'] = True
       elif o in ("-i", "--ignore"):
@@ -128,14 +128,14 @@ def inputcheck(what):
             try:
                inputs['input_tdate'] = string2tdate( str(a) )
             except:
-               print '-t/--tdate input has to be an integer or a datestring (YYYY-MM-DD)!'; usage(what)
+               print('-t/--tdate input has to be an integer or a datestring (YYYY-MM-DD)!'); usage(what)
       elif o in ("-d", "--dates"):
          try:
             dates = a.split(",")
             inputs["input_dates"] = (string2tdate( dates[0] ), string2tdate( dates[1] ))
          except:
             #TODO: make it possible to enter single dates rather than a range (maybe date1;date2)
-            print '-d/--dates input has to be a list of 2 dates (YYYY-MM-DD,YYYY-MM-DD)!'; usage(what)
+            print('-d/--dates input has to be a list of 2 dates (YYYY-MM-DD,YYYY-MM-DD)!'); usage(what)
       elif o in ("-n", "--filename"):
          inputs['input_filename'] = str(a)
       elif o in ("-v", "--verbose"):
@@ -146,7 +146,7 @@ def inputcheck(what):
    # - If alldates is True and additionally
    #   a tdate is set: stop.
    if inputs['input_alldates'] and not inputs['input_tdate'] == None:
-      import utils
+      from . import utils
       utils.exit('Input -a/--alldates and -t/--tdate cannot be combined!')
 
 
@@ -176,14 +176,14 @@ def usage(what=None):
       hashes.append(cities[i]['hash'])
 
    if what == None:
-      print """
+      print("""
       Run into the usage from the inputcheck module with None type.
       You should set an explcit 'what' type when calling the usage
       so that I can give you a propper exit statement and some
       explanation which input options are allowed.
-      """
+      """)
    else:
-      print """
+      print("""
       Sorry, wrong usage for type %s.
       Allowed inputs for this script are:
       
@@ -208,7 +208,7 @@ def usage(what=None):
                      of the scripts!!!! But these securety
                      features are there for some reason. So
                      please do not use.
-      """ % (what, IDs, names, hashes)
+      """ % (what, IDs, names, hashes))
 
    utils.exit('This is/was the usage (what: %s).' % what)
 
@@ -234,13 +234,13 @@ def readconfig(file='config.conf',inputs=None,conversion_table=None):
    """
 
    import sys, os
-   import utils
+   from . import utils
 
    if not os.path.isfile(file):
       utils.exit('Cannot read file %s. Not readable or not existing' % file)
 
    # - Import ConfigParser
-   from ConfigParser import ConfigParser
+   from configparser import ConfigParser
    CNF = ConfigParser()
    CNF.read(file)
 
@@ -313,14 +313,14 @@ def readconfig(file='config.conf',inputs=None,conversion_table=None):
    except:
       utils.exit('Problems rading all required data infos from config file')
    if not os.path.isdir( config['data_moses'] ):
-      print "[WARNING] Could not find directory %s necessary for ComputeMoses" % config['data_moses'] 
-      print "          ComputeMoes will crash!"
+      print("[WARNING] Could not find directory %s necessary for ComputeMoses" % config['data_moses']) 
+      print("          ComputeMoes will crash!")
    try:
       config['data_moses_out']   = CNF.get('data','moses_out')
       # If folder does not exist: ignore
       if not os.path.isdir( config['data_moses_out'] ):
-         print "[WARNING] Output directory for moses (moses_out=\"{0:s}\")".format(config['data_moses_out'])
-         print "          does not exist, ignore!"
+         print("[WARNING] Output directory for moses (moses_out=\"{0:s}\")".format(config['data_moses_out']))
+         print("          does not exist, ignore!")
          config['data_moses_out'] = None
    except:
       utils.exit('No [data] modes_out directory set, will not copy files to webserver.')
@@ -345,9 +345,9 @@ def readconfig(file='config.conf',inputs=None,conversion_table=None):
    # ----------------------------------------------------------------
    # - Adding inputs if set
    if not inputs == None:
-      for k in inputs.keys():
+      for k in list(inputs.keys()):
          # - Duplicated?
-         if k in config.keys():
+         if k in list(config.keys()):
             utils.exit("inputs dict contains keys which are generated in this " + \
                      "method as well. Duplication! Exit. Key is: %s" % k)
          # - Else append
@@ -381,19 +381,19 @@ class wmowwConversion( object ):
 
         import sys, os
         if not os.path.isfile( file ):
-            print "Sorry, cannot find file \"{0:s}\"".format(file)
+            print("Sorry, cannot find file \"{0:s}\"".format(file))
             sys.exit(8)
         # Save file
         self.file = file
 
         # Use configparser to read the file
-        from ConfigParser import ConfigParser
+        from configparser import ConfigParser
         CNF = ConfigParser()
         try:
             CNF.read( file )
         except Exception as e:
-            print e
-            print "ERROR reading the file \"{0:s}\"".format(file)
+            print(e)
+            print("ERROR reading the file \"{0:s}\"".format(file))
             sys.exit(9)
 
         self._past_weather_    = self._read_section_(CNF,"past weather")
@@ -425,7 +425,7 @@ class wmowwConversion( object ):
 
             mtch = re.match("^([0-9]+)\s+gets\s+([0-9]+|None)$", i[1])
             if not mtch:
-                print "    [!] Misspecified: \"{0:s}\". Ignore.".format(i)
+                print("    [!] Misspecified: \"{0:s}\". Ignore.".format(i))
                 continue
             # Use integer key as string key
             if mtch.group(2) == "None":     val = None
@@ -466,7 +466,7 @@ class wmowwConversion( object ):
                     "Input section=\"{:s}\" is unknown.".format(section))
 
         # If key is not defined: return None 
-        if not strcode in lookup.keys():        return None
+        if not strcode in list(lookup.keys()):        return None
         # Else return the corresponding convert-to value
         return lookup[strcode]["gets"]
 
@@ -475,25 +475,25 @@ class wmowwConversion( object ):
         """Development method: prints content of the object to stdout.
         """
 
-        print "\nwmoww Config Section \"past weather\":"
+        print("\nwmoww Config Section \"past weather\":")
         if not self._past_weather_:
-            print " - Nothing defined"
+            print(" - Nothing defined")
         else:
-            for key,values in self._past_weather_.iteritems():
+            for key,values in self._past_weather_.items():
                 if values["gets"]:
-                    print " - {0:<50s}: {1:3d} gets {2:4d}".format(values["name"],int(key),values["gets"])
+                    print(" - {0:<50s}: {1:3d} gets {2:4d}".format(values["name"],int(key),values["gets"]))
                 else:
-                    print " - {0:<50s}: {1:3d} gets None".format(values["name"],int(key))
+                    print(" - {0:<50s}: {1:3d} gets None".format(values["name"],int(key)))
 
-        print "\nwmoww Config Section \"present weather\":"
+        print("\nwmoww Config Section \"present weather\":")
         if not self._present_weather_:
-            print " - Nothing defined"
+            print(" - Nothing defined")
         else:
-            for key,values in self._present_weather_.iteritems():
+            for key,values in self._present_weather_.items():
                 if values["gets"]:
-                    print " - {0:<50s}: {1:3d} gets {2:4d}".format(values["name"],int(key),values["gets"])
+                    print(" - {0:<50s}: {1:3d} gets {2:4d}".format(values["name"],int(key),values["gets"]))
                 else:
-                    print " - {0:<50s}: {1:3d} gets None".format(values["name"],int(key))
+                    print(" - {0:<50s}: {1:3d} gets None".format(values["name"],int(key)))
 
 #   Helper function which creates a timestamp from a datetime object
 def timestamp( dt ):
@@ -585,19 +585,19 @@ def nicename( string, conversion_table = None ):
 
    import unicodedata
    import re
-   import utils
+   from . import utils
 
    # Check whether conversion table is set. If: check if
    # User is in the conversion table keys. If so, rename
    string = string.strip()
    if conversion_table is not None:
-      if string in conversion_table.keys():
+      if string in list(conversion_table.keys()):
          string = conversion_table[string]
 
    # Escape dangerous characters
    string = re.escape(string).strip()
 
-   nicename = unicodedata.normalize('NFKD', unicode(string,'ISO-8859-1')) \
+   nicename = unicodedata.normalize('NFKD', str(string,'ISO-8859-1')) \
                   .encode('ascii', 'ignore')
    if not "Titisee" in nicename and not "Neustadt" in nicename:
       nicename = nicename.replace('/','_')

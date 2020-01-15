@@ -29,7 +29,7 @@ if __name__ == "__main__":
 
    # - If input_user was given ignore it
    if not config['input_user'] == None:
-      print '[!] NOTE: got input -u/--user. Will be ignored in AstralTable.'
+      print('[!] NOTE: got input -u/--user. Will be ignored in AstralTable.')
       config['input_user'] = None
 
 

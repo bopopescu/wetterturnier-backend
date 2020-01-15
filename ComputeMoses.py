@@ -102,7 +102,7 @@ if __name__ == '__main__':
       moses_files = glob( "{0:s}/moses*.{1:1s}pw".format(config['data_moses'], city['name'][0].lower()) )
       # - empty?
       if len( moses_files ) == 0:
-         print '    %s\n' % 'Cannot find moses coefficients, skip'
+         print('    %s\n' % 'Cannot find moses coefficients, skip')
          return( False )
 
       origin = dt.date(1970,1,1)
@@ -119,8 +119,8 @@ if __name__ == '__main__':
       newest      = max( file_dates )
       newest_file = "{0:s}/moses{1:s}.{2:1s}pw".format(
                     config['data_moses'], newest.strftime("%y%m%d"), city['name'][0].lower() )
-      print "    Newest matching moses file: {0:s} ({1:s})".format(
-                    newest.strftime("%Y-%m-%d"), newest_file )
+      print("    Newest matching moses file: {0:s} ({1:s})".format(
+                    newest.strftime("%Y-%m-%d"), newest_file ))
 
       # If the file is too old: return FALSE. As the file should be computed
       # between each tournament it should never be older than 7 days, I take 5 here
@@ -130,8 +130,8 @@ if __name__ == '__main__':
          
       # Drop a warning and return False if too old.
       if age > offset:
-          print "[!] Problems with Moses: coefficient file too old ({0:d} days)".format(age)
-          print "    Return 'False', Moses wont be computed!"
+          print("[!] Problems with Moses: coefficient file too old ({0:d} days)".format(age))
+          print("    Return 'False', Moses wont be computed!")
           return False
 
       # Else return file name of the newest file, tdate
@@ -145,7 +145,7 @@ if __name__ == '__main__':
    # ----------------------------------------------------------------
    petrus_userID = db.get_user_id( "Petrus" )
    if not petrus_userID:
-      print "[!] Cannot find \"Petrus\" (User) needed for Moses. Stop script here."
+      print("[!] Cannot find \"Petrus\" (User) needed for Moses. Stop script here.")
       sys.exit(0)
 
    # ----------------------------------------------------------------
@@ -154,14 +154,14 @@ if __name__ == '__main__':
    for city in cities:
       if config['input_alldates']:
          tdates = db.all_tournament_dates( city['ID'] )
-         print 'ALL DATES'
+         print('ALL DATES')
 
       # -------------------------------------------------------------
       #  - Looping over tdates
       # -------------------------------------------------------------
       for tdate in tdates:
          bet = [{},{}]
-         print '\n  * Compute the %s for city %s (ID: %d)' % (username, city['name'], city['ID']) 
+         print('\n  * Compute the %s for city %s (ID: %d)' % (username, city['name'], city['ID'])) 
          
          # - Searching suitable coefficient file
          #   ... WARNING 200 offset disabled, but we do have a problem
@@ -172,7 +172,7 @@ if __name__ == '__main__':
 
          if not moses_file: continue
    
-         print '  * Found newest moses file %s' % moses_file
+         print('  * Found newest moses file %s' % moses_file)
          mfid = open(moses_file, 'r')
          moses_data = iter(mfid.read().split('\n'))
          moses = {}
@@ -187,7 +187,7 @@ if __name__ == '__main__':
             else: continue
          db.upsert_moses_coefs(city['ID'], moses_tdate, moses)
          moses = db.get_moses_coefs(city['ID'], tdate)
-         print moses
+         print(moses)
          # -------------------------------------------------------------
          # - Looping over all parameters, search for Moses coefficients
          #   and try to find the bets of the users.
@@ -204,7 +204,7 @@ if __name__ == '__main__':
                   if not userID: userID = groupID 
 
                   if not userID:
-                     print '    - Problems getting userID for user %s' % (user)
+                     print('    - Problems getting userID for user %s' % (user))
                      utils.exit('Reto, should not happen. What doing now?')
                   
                      #   and parameter 'paramID' for day 'day'.
@@ -227,7 +227,7 @@ if __name__ == '__main__':
          # -------------------------------------------------------------
          # - Inserting into database now
          # -------------------------------------------------------------
-         print '    Inserting data into database now'
+         print('    Inserting data into database now')
          for day in range(1,3):
             for k in params:
                paramID = db.get_parameter_id(k)

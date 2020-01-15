@@ -42,7 +42,7 @@ if __name__ == '__main__':
    #   the bet-dates are for Saturday and Sunday.
    if config['input_tdate'] == None:
       tdates     = [db.current_tournament()]
-      print '  * Current tournament is %s' % utils.tdate2string( tdates[0] )
+      print('  * Current tournament is %s' % utils.tdate2string( tdates[0] ))
    else:
       tdates     = [config['input_tdate']]
 
@@ -75,14 +75,14 @@ if __name__ == '__main__':
 
       tdate_int = tdate
       tdate = dt.datetime.fromtimestamp( tdate * 86400 )
-      print "    Processing data for tournament: %s (tdate=%d)" % (tdate,tdate_int)
+      print("    Processing data for tournament: %s (tdate=%d)" % (tdate,tdate_int))
 
       # ----------------------------------------------------------------
       # - Now going over the cities and compute the points. 
       # ----------------------------------------------------------------
       for city in cities:
 
-         print "\n  * Observations for station %s" % city['name']
+         print("\n  * Observations for station %s" % city['name'])
 
          # ----------------------------------------------------------------
          # - Looping trough tournament/bet dates.
@@ -95,7 +95,7 @@ if __name__ == '__main__':
          for day in range(-1,ndays):
 
             date = tdate + dt.timedelta( day ) 
-            print "\n  * Processing obsevations for day: %s\n" % date
+            print("\n  * Processing obsevations for day: %s\n" % date)
 
             obs = getobs.getobs(config, db, city, date, wmoww )
 

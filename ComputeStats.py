@@ -8,10 +8,10 @@ if __name__ == '__main__':
 
    # - Evaluating input arguments
    inputs = utils.inputcheck('ComputeStats')
-   print inputs
+   print(inputs)
    # - Read configuration file
    config = utils.readconfig('config.conf',inputs)
-   print config
+   print(config)
    # - Initializing class and open database connection
    db        = database.database(config)
 
@@ -21,7 +21,7 @@ if __name__ == '__main__':
    #   no input tournament date -t/--tdate.
    if config['input_tdate'] == None:
       tdates     = [db.current_tournament()]
-      print '  * Current tournament is %s' % utils.tdate2string( tdates[0] )
+      print('  * Current tournament is %s' % utils.tdate2string( tdates[0] ))
    else:
       tdates     = [config['input_tdate']]
 
@@ -59,12 +59,12 @@ if __name__ == '__main__':
    for city in cities:
       if config['input_alldates']:
          tdates = db.all_tournament_dates( city['ID'] )
-         print 'ALL DATES'
+         print('ALL DATES')
       for tdate in tdates:
          for day in range(3):
             stats = db.get_stats( city['ID'], measures[-8:]+["sd_upp"], 0, tdate, day )
             #if all stats are 0 we assume that no tournament took place on tdate
-            if stats.values() == [0] * len(stats):
+            if list(stats.values()) == [0] * len(stats):
                continue
             else:
                db.upsert_stats( city['ID'], stats, 0, tdate, day)
@@ -80,7 +80,7 @@ if __name__ == '__main__':
       from json import load
       with open("aliases.json") as aliases:
          aliases = load( aliases )
-      print aliases
+      print(aliases)
       for userID in userIDs:
 	 user = db.get_username_by_id(userID)
 	 for city in cities:
@@ -101,7 +101,7 @@ if __name__ == '__main__':
          for city in cities:
             table = pd.read_sql_query( sql % ( cols, db.prefix, city['ID'] ), db )
             table.to_excel( writer, sheet_name = city["hash"] )
-            print table
+            print(table)
 
       #now we call a plotting routine which draws some nice statistical plots
       import PlotStats

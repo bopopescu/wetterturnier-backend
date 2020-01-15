@@ -36,7 +36,7 @@ if __name__ == '__main__':
    #   the bet-dates are for Saturday and Sunday.
    if config['input_tdate'] == None:
       tdates     = [db.current_tournament()]
-      print '  * Current tournament is %s' % utils.tdate2string( tdates[0] )
+      print('  * Current tournament is %s' % utils.tdate2string( tdates[0] ))
    else:
       tdates     = [config['input_tdate']]
 
@@ -79,7 +79,7 @@ if __name__ == '__main__':
       # -------------------------------------------------------------
       for tdate in tdates:
 
-         print '  * Current tournament is %s' % utils.tdate2string( tdate )
+         print('  * Current tournament is %s' % utils.tdate2string( tdate ))
 
          # ----------------------------------------------------------------
          # - Check if we are allowed to perform the computation of the
@@ -87,7 +87,7 @@ if __name__ == '__main__':
          # ----------------------------------------------------------------
          check = utils.datelock(config,tdate)
          if not config['input_force'] and check:
-            print '    Date is \'locked\' (datelock). Dont execute, skip.'
+            print('    Date is \'locked\' (datelock). Dont execute, skip.')
             continue
 
          # ----------------------------------------------------------
@@ -97,7 +97,7 @@ if __name__ == '__main__':
          #   Take the latest judgingclass changed in 2002-12-06
          if tdate < 12027:
             if config['input_ignore']:
-               print '[!] Judginglcass not defined - but started in ignore mode. Skip.'
+               print('[!] Judginglcass not defined - but started in ignore mode. Skip.')
                continue
             else:
                utils.exit('I dont know which judgingclass I should use for this date. Stop.')
@@ -110,7 +110,7 @@ if __name__ == '__main__':
             from importlib import import_module
             judging = import_module(modname)
          except Exception as e:
-            print e
+            print(e)
             utils.exit("Problems loading the judgingclass %s" % modname)
 
          jug = judging.judging()
@@ -120,8 +120,8 @@ if __name__ == '__main__':
          # ----------------------------------------------------------
          for day in range(1,3):
    
-            print '\n  * Compute points for city %s (ID: %d)' % (city['name'], city['ID'])
-            print '    Bets for: %s' % utils.tdate2string( tdate + day )
+            print('\n  * Compute points for city %s (ID: %d)' % (city['name'], city['ID']))
+            print('    Bets for: %s' % utils.tdate2string( tdate + day ))
    
             # -------------------------------------------------------
             # - Compute points
@@ -132,12 +132,12 @@ if __name__ == '__main__':
                   if not param == config['input_param']: continue
    
                paramID = db.get_parameter_id( param )
-               print '    Compute points for %s (paramID: %d)' % (param, paramID)
+               print('    Compute points for %s (paramID: %d)' % (param, paramID))
    
                # - Gettig observations
                obs = db.get_obs_data(city['ID'],paramID,tdate,day)
                if not obs:
-                  print '    Observations ont available. Skip at that time.'
+                  print('    Observations ont available. Skip at that time.')
                   continue
    
                # - Loading city observations
@@ -146,11 +146,11 @@ if __name__ == '__main__':
                tmp = db.get_cityall_bet_data(city['ID'],paramID,tdate,day,nullonly=nullonly)
                # Gotno data?
                if not tmp[0] or not tmp[1]:
-                  print "[!] Got no data to compute the points. Skip"; continue
+                  print("[!] Got no data to compute the points. Skip"); continue
                db_userID, db_cityID, db_paramID, db_tdate, db_betdate, values = tmp
                # - No data: skip 
                if not values:
-                  print '    Got no data for this parameter. Skip.'
+                  print('    Got no data for this parameter. Skip.')
                   continue
    
                # - If the parameter to judge is "dd" we need additional

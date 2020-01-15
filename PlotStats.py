@@ -85,7 +85,7 @@ def plot(db, cities, tdate):
       ### PLOT PARTICIPANT COUNT (CURRENT CITY)
       fig, ax = pl.subplots()
       ax.plot_date( dates, part, marker=".", markeredgecolor="black", linestyle="-")
-      for i,col in zip(range(3), ["r","b","g"]):
+      for i,col in zip(list(range(3)), ["r","b","g"]):
          ax.axhline( citystats[i], c=col )
 
       # format the ticks
@@ -135,16 +135,16 @@ def plot(db, cities, tdate):
          y = np.array(median) #so the curve_fit can work
 
          #make the curve_fit
-         print(city['hash'])
+         print((city['hash']))
          popt, pcov = curve_fit(func, x, y)
          print("POLY FIT:")
-         print("a = %s , b = %s, c = %s, d = %s" % (popt[0], popt[1], popt[2], popt[3]) )
+         print(("a = %s , b = %s, c = %s, d = %s" % (popt[0], popt[1], popt[2], popt[3]) ))
          stats = {"p" : popt[0], "q" : popt[1], "r" : popt[2], "s" : popt[3]}
          if i == "":
             db.upsert_stats( city["ID"], stats ) 
          eopt, ecov = curve_fit(e_func, x, y)
          print("EXP FIT:")
-         print("a = %s , b = %s, c = %s" % (eopt[0], eopt[1], eopt[2]) )
+         print(("a = %s , b = %s, c = %s" % (eopt[0], eopt[1], eopt[2]) ))
          stats = {"A" : eopt[0], "B" : eopt[1], "C" : eopt[2]}
          if i == "":
             db.upsert_stats( city["ID"], stats )
@@ -225,13 +225,13 @@ def plot(db, cities, tdate):
          ### PLOT MEAN + SD
          y = np.array(mean) #so the curve_fit can work
 
-         print(city['hash'])
+         print((city['hash']))
          popt, pcov = curve_fit(func, x, y)
          print("POLY FIT:")
-         print("a = %s , b = %s, c = %s, d = %s" % (popt[0], popt[1], popt[2], popt[3]) )
+         print(("a = %s , b = %s, c = %s, d = %s" % (popt[0], popt[1], popt[2], popt[3]) ))
          eopt, ecov = curve_fit(e_func, x, y, p0=[0.5,2,4])
          print("EXP FIT:")
-         print("a = %s , b = %s, c = %s" % (eopt[0], eopt[1], eopt[2]) )
+         print(("a = %s , b = %s, c = %s" % (eopt[0], eopt[1], eopt[2]) ))
          #sopt, scov = curve_fit(sigmoid, x, y, p0=[10000, 0.005], method='dogbox' )
 
          fig, ax = pl.subplots()
@@ -282,9 +282,9 @@ def plot(db, cities, tdate):
 
             #insert m,b to database (citystats)
             if filename+i == "sd_upp":
-               print "SD_upp:\nm = %f | n = %f" % (m, n)
+               print("SD_upp:\nm = %f | n = %f" % (m, n))
                print("LOG FIT:")
-               print("T = %s , U = %s, V = %s" % (eopt[0], eopt[1], eopt[2]) )
+               print(("T = %s , U = %s, V = %s" % (eopt[0], eopt[1], eopt[2]) ))
                stats = {"m" : m, "n" : n, "T" : eopt[0], "U" : eopt[1], "V" : eopt[2]}
                db.upsert_stats( city["ID"], stats )
 
@@ -402,7 +402,7 @@ if __name__ == '__main__':
 
    if config['input_tdate'] == None:
       tdate     = db.current_tournament()
-      print '  * Current tournament is %s' % utils.tdate2string( tdate )
+      print('  * Current tournament is %s' % utils.tdate2string( tdate ))
    else:
       tdate = config['input_tdate']
 

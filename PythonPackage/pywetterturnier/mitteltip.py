@@ -17,7 +17,7 @@ Function to compute the mitteltipps.
 .. todo:: Could contain a bit more details!
 """
 
-import utils
+from . import utils
 # - List element to store the two dict dbects
 #   containing the bets for Petrus
 bet = [{},{}]
@@ -44,7 +44,7 @@ def mitteltip(db,typ,ID,city,tdate,betdata=False):
    # - Day one, day two
    for day in range(1,3):
 
-      print '    Compute for day %d (%s)' % (tdate+day, utils.tdate2string( tdate+day ))
+      print('    Compute for day %d (%s)' % (tdate+day, utils.tdate2string( tdate+day )))
 
       #TODO shorten code for parameters with the same rule (like in old ComputePersistenz)
       #Freitag only gets calculated when the day is over (Saturday morning)
@@ -59,7 +59,7 @@ def mitteltip(db,typ,ID,city,tdate,betdata=False):
       if type(data) == type(bool()): return False
       for i in [0, 80, 90]:
          if float( len(np.where( data == i )[0]) ) / float( len(data) ) > 0.5:
-            bet[day-1]['N'] = i; print "N = %d" % i
+            bet[day-1]['N'] = i; print("N = %d" % i)
          else:
             bet[day-1]['N'] = np.round( np.mean(data), -1 )
             break
@@ -130,17 +130,17 @@ def mitteltip(db,typ,ID,city,tdate,betdata=False):
          return False
       dd = dd / 10.
       tips = len(dd)
-      print "total dd tips:       %d" % tips
+      print("total dd tips:       %d" % tips)
       n0 = len(np.where( dd == 0. )[0])
       n990 = len(np.where( dd == 990. )[0])
-      print "n0   = %d" % n0
-      print "n990 = %d" % n990
+      print("n0   = %d" % n0)
+      print("n990 = %d" % n990)
       #if the majority has 990 or 0 take this!
       
       if float( n0 ) / float(tips) > 0.5:
-         bet[day-1]['dd'] = 0.; print "bet: %d" % 0
+         bet[day-1]['dd'] = 0.; print("bet: %d" % 0)
       elif float( n990 ) / float(tips) >= 0.5:
-         bet[day-1]['dd'] = 9900.; print "bet: %d" % 990
+         bet[day-1]['dd'] = 9900.; print("bet: %d" % 990)
       else:
          """
          TODO: We have to ensure (rule-wise and in bet mask) that NO ONE
@@ -155,32 +155,32 @@ def mitteltip(db,typ,ID,city,tdate,betdata=False):
                   np.delete(dd, i)
                   np.delete(ff, i)
             tips -= n0 + n990
-            print "tips with direction: %d" % tips
+            print("tips with direction: %d" % tips)
             for i in list(range(len(dd))):
                if dd[i] == 0 or dd[i] == 990:
                   continue
                u += ff[i] * np.sin( np.deg2rad(dd[i]) ) 
                v += ff[i] * np.cos( np.deg2rad(dd[i]) )
-            print "u = %f" % u
-            print "v = %f" % v
-            print "sum(ff) = %d" % sum(ff)
+            print("u = %f" % u)
+            print("v = %f" % v)
+            print("sum(ff) = %d" % sum(ff))
             u = u / float( sum(ff) * tips )
             v = v / float( sum(ff) * tips )
-            print "u2 = %f" % u
-            print "v2 = %f" % v         
+            print("u2 = %f" % u)
+            print("v2 = %f" % v)         
          else:
-            print "cannot link or weight dd with ff"
+            print("cannot link or weight dd with ff")
             for i in list(range(len(dd))):
                if dd[i] == 0 or dd[i] == 990:
                   continue
                u += np.sin( np.deg2rad(dd[i]) )
                v += np.cos( np.deg2rad(dd[i]) )
-            print "u = %f" % u
-            print "v = %f" % v
+            print("u = %f" % u)
+            print("v = %f" % v)
             u = u / float( tips )
             v = v / float( tips )
-            print "u2 = %f" % u
-            print "v2 = %f" % v
+            print("u2 = %f" % u)
+            print("v2 = %f" % v)
 
          bet[day-1]['dd'] = np.round( np.arctan2(u,v) * 1800. / np.pi, -2 )
          if bet[day-1]['dd'] < 0:
@@ -236,10 +236,10 @@ def mitteltip(db,typ,ID,city,tdate,betdata=False):
          n7 = len(np.where(data == 7.)[0])
          n8 = len(np.where(data == 8.)[0])
          n9 = len(np.where(data == 9.)[0])
-         print "    n0={0:d},  n4={1:d},  n5={2:d},  n6={3:d},  n7={4:d},  n8={5:d},  n9={6:d}".format(
-                n0, n4, n5, n6, n7, n8, n9 )
-         print "    n0+n4 = {0:d},  len(data) = {1:d},  (n0+n4)/len(data): {2:.3f}".format(
-                (n0+n4), len(data), (n0+n4)/len(data))
+         print("    n0={0:d},  n4={1:d},  n5={2:d},  n6={3:d},  n7={4:d},  n8={5:d},  n9={6:d}".format(
+                n0, n4, n5, n6, n7, n8, n9 ))
+         print("    n0+n4 = {0:d},  len(data) = {1:d},  (n0+n4)/len(data): {2:.3f}".format(
+                (n0+n4), len(data), (n0+n4)/len(data)))
          # - Decision 0,4 .vs. 5,6,7,8,9
          if float(n0+n4) / float(len(data)) > 0.5:
             if n4 >= n0:
@@ -274,13 +274,13 @@ def mitteltip(db,typ,ID,city,tdate,betdata=False):
       bet[day-1]['Wn'] = WVhelper( data )
 
    # - Show the tip 
-   print ''
-   print '    Bet for %s' % utils.tdate2string( tdate + 1 ),
-   print '    Bet for %s' % utils.tdate2string( tdate + 2 )
-   for k in bet[0].keys():
-      print '    - %-5s %5d' % (k,bet[0][k]),
-      print '         - %-5s %5d' % (k,bet[1][k])
-   print ''
+   print('')
+   print('    Bet for %s' % utils.tdate2string( tdate + 1 ), end=' ')
+   print('    Bet for %s' % utils.tdate2string( tdate + 2 ))
+   for k in list(bet[0].keys()):
+      print('    - %-5s %5d' % (k,bet[0][k]), end=' ')
+      print('         - %-5s %5d' % (k,bet[1][k]))
+   print('')
 
 
 
@@ -311,7 +311,7 @@ def random(db,typ,ID,city,tdate,betdata=False):
    
    for day in range(1,3):
 
-      print '    Compute for day %d (%s)' % (tdate+day, utils.tdate2string( tdate+day ))
+      print('    Compute for day %d (%s)' % (tdate+day, utils.tdate2string( tdate+day )))
 
       param = 'dd'
       paramID = db.get_parameter_id(param)

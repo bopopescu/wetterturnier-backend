@@ -72,9 +72,9 @@ if __name__ == '__main__':
 
    #calculate userstats only
    for city in cities:
-      print "city = " + city["hash"]
+      print("city = " + city["hash"])
       midyear = mids[city['ID']]
-      print "midyear = " + str(midyear) + "\n"
+      print("midyear = " + str(midyear) + "\n")
       if ymax == -1:
          sql = "SELECT max FROM %swetterturnier_citystats WHERE cityID = %d"
          cur = db.cursor()
@@ -96,7 +96,7 @@ if __name__ == '__main__':
    with pd.ExcelWriter( "plots/test_list.xls" ) as writer:
       for city in cities:
          table = pd.read_sql_query( sql % ( cols, db.prefix, city['ID'], database.sql_tuple(userIDs) ), db )
-         print table
+         print(table)
          table.to_excel( writer, sheet_name=city["hash"] )
 
    db.commit()

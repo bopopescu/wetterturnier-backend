@@ -65,7 +65,7 @@ class judging(object):
       """
 
       if not quiet:
-         print '    Initializing judging class 2002-12-06 py'
+         print('    Initializing judging class 2002-12-06 py')
       self.quiet = quiet
 
    # ----------------------------------------------------------------
@@ -154,7 +154,7 @@ class judging(object):
         to one digit.
       """
 
-      import utils
+      from . import utils
       import numpy as np
 
       # - If obs is none at all: return None
@@ -193,7 +193,7 @@ class judging(object):
 
       # - Loading method dynamical and call it.
       if not self.quiet:
-         print '    - Using method: %s' % method_to_use
+         print('    - Using method: %s' % method_to_use)
       call = getattr(self,method_to_use)
       # Round to one digit after the comma
       return np.round( call(obs,data,special), 1 )
@@ -272,7 +272,7 @@ class judging(object):
       """
 
       if not self.quiet:
-         print '    - Called TTm/TTn/TTd point computation method'
+         print('    - Called TTm/TTn/TTd point computation method')
       data   = np.asarray(data)
       resid  = self.__residuals__(obs,data)
 
@@ -307,7 +307,7 @@ class judging(object):
       """
 
       if not self.quiet:
-         print '    - Called N point computation method'
+         print('    - Called N point computation method')
       data   = np.asarray(data)
       resid  = self.__residuals__(obs,data)
 
@@ -356,7 +356,7 @@ class judging(object):
       """
 
       if not self.quiet:
-         print '    - Called Sd point computation method'
+         print('    - Called Sd point computation method')
       data   = np.asarray(data)
       resid  = self.__residuals__(obs,data)
 
@@ -408,7 +408,7 @@ class judging(object):
       """
 
       if not self.quiet:
-         print '    - Called dd point computation method'
+         print('    - Called dd point computation method')
       data   = np.asarray(data)
       obs    = np.asarray(obs);
       try:
@@ -566,7 +566,7 @@ class judging(object):
       """
 
       if not self.quiet:
-         print '    - Called ff point computation method'
+         print('    - Called ff point computation method')
       data   = np.asarray(data)
       resid  = self.__residuals__(obs,data)
 
@@ -607,7 +607,7 @@ class judging(object):
       data[np.where( data < 250. )] = 0
 
       if not self.quiet:
-         print '    - Called fx point computation method'
+         print('    - Called fx point computation method')
       data   = np.asarray(data)
       resid  = self.__residuals__(obs,data)
 
@@ -677,7 +677,7 @@ class judging(object):
       """
 
       if not self.quiet:
-         print '    - Called WvWn point computation method'
+         print('    - Called WvWn point computation method')
       data   = np.asarray(data)
 
       # Deduction matrix list. Note that 1/2/3 will never be
@@ -735,7 +735,7 @@ class judging(object):
       """
 
       if not self.quiet:
-         print '    - Called PPP point computation method'
+         print('    - Called PPP point computation method')
       data   = np.asarray(data)
       resid  = self.__residuals__(obs,data)
 
@@ -773,7 +773,7 @@ class judging(object):
       MAX = np.max(obs)
 
       if not self.quiet:
-         print '    - Called RR point computation method'
+         print('    - Called RR point computation method')
       data   = np.asarray(data)
       # - WARNING: compute residuals only to 0mm observation!
       #   The penalty for observed -3.0 will be added later on.
@@ -872,10 +872,10 @@ class judging(object):
       points = maxpoints - deduction
 
       # - Show data (development stuff)
-      if MIN >=0: print ' WET CONDITIONS'
-      if MAX < 0: print ' DRY CONDITIONS'
+      if MIN >=0: print(' WET CONDITIONS')
+      if MAX < 0: print(' DRY CONDITIONS')
       for i in range(len(data)):
-         print '%5d %5d | bet %5d | resid: %5d | %6.2f  (ded: %6.2f)' % (MIN, MAX, data[i], resid[i], points[i], deduction[i])
+         print('%5d %5d | bet %5d | resid: %5d | %6.2f  (ded: %6.2f)' % (MIN, MAX, data[i], resid[i], points[i], deduction[i]))
 
       return points
 

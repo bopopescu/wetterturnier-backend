@@ -111,10 +111,10 @@ class getobs( object ):
          # - no info? Skip
          if res == None:
             maxSd[station.wmo] = None
-            print "[!] ERROR: Problems in get_maximum_Sd. Reason: \n" + \
+            print("[!] ERROR: Problems in get_maximum_Sd. Reason: \n" + \
                   "    there is no entry for wmo station %d in table\n" % station.wmo + \
                   "    obs.stations and I can't compute the astronomic\n" + \
-                  "    sunshine duration."
+                  "    sunshine duration.")
             maxSd[station.wmo] = None
       
          # - Else
@@ -142,8 +142,8 @@ class getobs( object ):
 
             maxSd[station.wmo] = daylen
 
-            print "    WMO station %7d: daylength %5.2f min (%5.2f h)" % \
-                   (station.wmo,daylen,daylen/60.)
+            print("    WMO station %7d: daylength %5.2f min (%5.2f h)" % \
+                   (station.wmo,daylen,daylen/60.))
 
       return maxSd
 
@@ -195,8 +195,8 @@ class getobs( object ):
 
       parameter = parameter.lower()
       if not parameter in self._columns_:
-         print "Parameter %s does not exist in database table %s. Stop in getobs.load_obs" % \
-                  (parameter, self._table_)
+         print("Parameter %s does not exist in database table %s. Stop in getobs.load_obs" % \
+                  (parameter, self._table_))
          return None
 
       tmp    = self._date_ + dt.timedelta( 0, hour*3600 )
@@ -337,7 +337,7 @@ class getobs( object ):
       if not self.data:
          self.data = {wmo:{}}
       # - Adding new dict with key wmo
-      elif not wmo in self.data.keys():
+      elif not wmo in list(self.data.keys()):
          self.data[wmo] = {}
       # - Adding value
       self.data[wmo][parameter] = value
@@ -381,13 +381,13 @@ class getobs( object ):
       try:
          fun = eval("self._prepare_fun_%s_" % parameter)
       except Exception as e:
-         print "[!] WARNING: method prepare_fun_%s does not exist. Cannot prepare data." % parameter
-         print e
+         print("[!] WARNING: method prepare_fun_%s does not exist. Cannot prepare data." % parameter)
+         print(e)
          return
 
       import inspect
       if not inspect.ismethod( fun ):
-         print "[!] WARNING: method prepare_fun_%s is no instancemethod. Cannot prepare data." % parameter
+         print("[!] WARNING: method prepare_fun_%s is no instancemethod. Cannot prepare data." % parameter)
          return
 
       # - Else calling function
@@ -440,7 +440,7 @@ class getobs( object ):
             if spvalue is not None:
                value = np.max(spvalue)
          else:
-            print "[!] Had problems parsing the special argument! SKip!"
+            print("[!] Had problems parsing the special argument! SKip!")
 
 
       # - Return value
@@ -479,7 +479,7 @@ class getobs( object ):
             if spvalue is not None:
                value = np.min(spvalue)
          else:
-            print "[!] Had problems parsing the special argument! SKip!"
+            print("[!] Had problems parsing the special argument! SKip!")
             
       # - Return value
       return value 
@@ -992,12 +992,12 @@ class getobs( object ):
       ww_now   = None if len(ww_now) == 0 else ww_now
       ww_after = None if len(ww_after) == 0 else ww_after
 
-      print "    Observed w1 is ",w1,
+      print("    Observed w1 is ",w1, end=' ')
 
       # If max(wX) > w1: use max(wX) value.
       if np.max(ww_now   > w1): w1 = int(np.max(ww_now  ))
       if np.max(ww_after > w1): w1 = int(np.max(ww_after))
-      print " considering [ww] as well yields ",w1
+      print(" considering [ww] as well yields ",w1)
 
       # - Return value  
       return None if w1 is None else float(w1)*10.
@@ -1221,36 +1221,36 @@ class getobs( object ):
       """
 
       if not self.data:
-         print "    Can't show data summary: no observation data loaded"
+         print("    Can't show data summary: no observation data loaded")
          return
 
       # - Else show data
       allcols = []
       for i in self.data:
-         for k in self.data[i].keys():
+         for k in list(self.data[i].keys()):
             if not k in allcols: allcols.append(k)
       allcols.sort()
 
       # - Show data
-      print "     ",
+      print("     ", end=' ')
       for stn in self.stations:
-         print " %13d   " % stn.wmo,
-      print ""
+         print(" %13d   " % stn.wmo, end=' ')
+      print("")
 
       # - Looping over params
       pnr = 0
       for param in allcols:
          pnr = pnr + 1 
-         print "   %2d  " % pnr,
+         print("   %2d  " % pnr, end=' ')
          for stn in self.stations:
-            if not stn.wmo in self.data.keys():
+            if not stn.wmo in list(self.data.keys()):
                continue
-            elif not param in self.data[stn.wmo].keys():
-               print " %-5s %8s   " % (param,"- - -"),
+            elif not param in list(self.data[stn.wmo].keys()):
+               print(" %-5s %8s   " % (param,"- - -"), end=' ')
             else:
-               print " %-5s %8d   " % (param,self.data[stn.wmo][param]),
+               print(" %-5s %8d   " % (param,self.data[stn.wmo][param]), end=' ')
 
-         print ""
+         print("")
          
 
    # ----------------------------------------------------------------
@@ -1263,7 +1263,7 @@ class getobs( object ):
       """
 
       if self.data == None:   
-         print "Cant write data to database. Because there are no data. Return."
+         print("Cant write data to database. Because there are no data. Return.")
          return
 
       # - Create tuple for update
@@ -1294,22 +1294,22 @@ class getobs( object ):
       cur = self.db.cursor()
       for stn in self.stations:
 
-         if not stn.wmo in self.data.keys():
-            print "[!] Can't find wmo %d in results. Skip." % stn.wmo
+         if not stn.wmo in list(self.data.keys()):
+            print("[!] Can't find wmo %d in results. Skip." % stn.wmo)
             continue
 
-         for key in self.data[stn.wmo].keys():
+         for key in list(self.data[stn.wmo].keys()):
 
             # - If parameter is not one of the wetterturnier parameters: skip
             if not key in param:
-               print "[!] Cant find parameter %s in database! Skip!" % key
+               print("[!] Cant find parameter %s in database! Skip!" % key)
                continue
 
             # - See if parameter is in NULLCONFIG of the station.
             #   If it is - ignore!
             if not param[key] in stn.getActiveParams( betdate ):
-               print "    Parameter %s (%d) is/was not an active parameter for station %d. Skip." % \
-                     (key, param[key], stn.wmo)
+               print("    Parameter %s (%d) is/was not an active parameter for station %d. Skip." % \
+                     (key, param[key], stn.wmo))
                continue
 
             # - Else append tuple
@@ -1384,15 +1384,15 @@ class getobs( object ):
       # Helper function to show oject content
       def show( self ):
          if self.error:
-            print "    Error: not able to extract required information from:"
-            print "           from {0:s} for {1:s}".format( self.special, self.date )
+            print("    Error: not able to extract required information from:")
+            print("           from {0:s} for {1:s}".format( self.special, self.date ))
          else:
-            print "    Parameter:    {0:s}".format( self.parameter )
-            print "    From:         {0:s} {1:s}".format( self.from_keyword, self.from_time )
-            print "    To:           {0:s} {1:s}".format( self.to_keyword,   self.to_time )
-            print "    Date is:      {0:s}".format( self.date.strftime("%Y-%m-%d %H:%M") )
-            print "    Yields from:  {0:s}".format( self.from_date.strftime("%Y-%m-%d %H:%M") )
-            print "    Yields to:    {0:s}".format( self.to_date.strftime("%Y-%m-%d %H:%M") )
+            print("    Parameter:    {0:s}".format( self.parameter ))
+            print("    From:         {0:s} {1:s}".format( self.from_keyword, self.from_time ))
+            print("    To:           {0:s} {1:s}".format( self.to_keyword,   self.to_time ))
+            print("    Date is:      {0:s}".format( self.date.strftime("%Y-%m-%d %H:%M") ))
+            print("    Yields from:  {0:s}".format( self.from_date.strftime("%Y-%m-%d %H:%M") ))
+            print("    Yields to:    {0:s}".format( self.to_date.strftime("%Y-%m-%d %H:%M") ))
          
       # Create proper date objects given the keyword,
       # the time (e.g., 19:00) and the current tournament date 'date'

@@ -35,7 +35,7 @@ if __name__ == '__main__':
    #   the bet-dates are for Saturday and Sunday.
    if config['input_tdate'] == None:
       tdates     = [db.current_tournament()]
-      print '  * Current tournament is %s' % utils.tdate2string( tdates[0] )
+      print('  * Current tournament is %s' % utils.tdate2string( tdates[0] ))
    else:
       tdates     = [config['input_tdate']]
 
@@ -96,9 +96,9 @@ if __name__ == '__main__':
          for rec in data:
             rank = np.where( points == rec[1] )[0]
             if not len(rank) == 1 :
-               print points
-               print rec
-               print rank
+               print(points)
+               print(rec)
+               print(rank)
                sys.exit('cannot apply rank')
             rec[2] = rank[0] + 1
 
