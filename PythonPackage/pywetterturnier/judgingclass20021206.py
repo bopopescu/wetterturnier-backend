@@ -705,7 +705,7 @@ class judging(object):
       for o in obs:
          for i in range(len(data)):
             #            maxpoints -              observed      bet value
-            tmp       =     10    - point_matrix[int(o/10)][int(data[i])/10]
+            tmp       =     10    - point_matrix[int(o/10)][int(data[i]/10)]
             # Minimum points: 0!
             if tmp < 0:
                points[i] = 0.

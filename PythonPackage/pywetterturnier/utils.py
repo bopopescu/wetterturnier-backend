@@ -57,8 +57,8 @@ def inputcheck(what):
       what (:obj:`str`): String to handle some specal cases. At the moment
       the input argument is not used at all!
    """
-
-   import sys, getopt, database
+   from pywetterturnier import database
+   import sys, getopt
    config = readconfig('config.conf')                  
    db        = database.database(config)
    # - Evaluating input arguments from the __main__ script.

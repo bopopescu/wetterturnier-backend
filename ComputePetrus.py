@@ -83,9 +83,9 @@ if __name__ == '__main__':
          #   mean bets on this date
          # ----------------------------------------------------------------
          check = utils.datelock(config,tdate)
-	 if check:
-	    print('    Date is \'locked\' (datelock). Dont execute, skip.')
-	    continue
+         if check:
+            print('    Date is \'locked\' (datelock). Dont execute, skip.')
+            continue
 
 	 # ----------------------------------------------------------------
 	 # - I do not have the judgingclass before the rule changes in
@@ -93,10 +93,10 @@ if __name__ == '__main__':
 	 #   to compute MeanBets for that time period (becuase we can
 	 #   never compute the corresponding points). Skip. 
 	 # ----------------------------------------------------------------
-	 if tdate < 12027:
-	    print('[!] I dont know the rules to compute points before 2002-12-06')
-	    print('    Therefore it makes no sense to compute MeanBets. Skip.')
-	    continue
+         if tdate < 12027:
+            print('[!] I dont know the rules to compute points before 2002-12-06')
+            print('    Therefore it makes no sense to compute MeanBets. Skip.')
+            continue
  
          # - Returns list object containing two dicts 
          #   where all the bets are in.
