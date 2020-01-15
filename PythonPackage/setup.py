@@ -46,7 +46,7 @@ setup(name='pywetterturnier',     # This is the package name
           'scipy',        # curve fitting
           #'MySQL-python', # MySQL connection
           #MySQL-python not supported anymore in python3!
-          'mysqlclient',  # new client version 1.4.4 since 1.4.5 didn't work
+          'mysqlclient==1.4.4',  # new client version 1.4.4 since 1.4.5 didn't work
           'importlib',    # Used to load the judgingclasses dynamically
           'python-dateutil',
           'pytz',         # Required by astral

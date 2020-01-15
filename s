@@ -3,7 +3,7 @@
 pyscript=$1
 source venv/bin/activate
 
-cd PythonPackage && python2 setup.py install
+cd PythonPackage && python setup.py install
 cd ..
 if [ -n "$pyscript" ]
 then

@@ -70,11 +70,11 @@ def parse_inputs():
    elif not os.path.isfile( options.filename ):
       parser.error("Cannot find file \"%s\" as given as input." % options.filename )
 
-   print "\n  * Script started, using options:"
-   print "    - Dry-run option:       %s" % options.dryrun
-   print "    - Script is silent:     %s" % options.silent
-   print "    - Input file:           %s" % options.filename
-   print "\n"
+   print("\n  * Script started, using options:")
+   print("    - Dry-run option:       %s" % options.dryrun)
+   print("    - Script is silent:     %s" % options.silent)
+   print("    - Input file:           %s" % options.filename)
+   print("\n")
 
    return options
    
@@ -85,7 +85,7 @@ def parse_inputs():
 class read_file_content( object ):
    def __init__(self,options):
       import sys, os
-      from ConfigParser import ConfigParser
+      from configparser import ConfigParser
       self.options = options
 
       CNF = ConfigParser()
@@ -128,7 +128,7 @@ class read_file_content( object ):
 
       # - Create options string
       self.args = "city=%s&user=%s&password=%s" % (self.city,self.user,self.password)
-      for key, val in self.data.iteritems(): 
+      for key, val in self.data.items(): 
          self.args += "&%s=%.1f" % (key,val)
 
       # - Create list object wihch can be used in subprocess. 
@@ -147,26 +147,26 @@ class read_file_content( object ):
    # Summary
    def summary(self):
 
-      print "\n  * Summary of the parsed data:"
-      print "    - City:           %s" % self.city
-      print "    - User:           %s" % self.city
-      print "    - Password:       %s" % ("*"*len(self.password))
-      print "    - Submit URL:     %s" % self.url 
-      print "" # just a spacer
-      print "    - Parameters loaded:"
-      for key, val in self.data.iteritems():
-         print "      %-10s %8.1f" % (key,val)
+      print("\n  * Summary of the parsed data:")
+      print("    - City:           %s" % self.city)
+      print("    - User:           %s" % self.city)
+      print("    - Password:       %s" % ("*"*len(self.password)))
+      print("    - Submit URL:     %s" % self.url) 
+      print("") # just a spacer
+      print("    - Parameters loaded:")
+      for key, val in self.data.items():
+         print("      %-10s %8.1f" % (key,val))
 
       # - If this was a dryrun just show the options
       if self.options.dryrun:
-         print "\n  * You have choosen the dryrun option."
-         print "    These are the commands which could be executed"
-         print "    to submit the data via autosubmit."
-         print "\n    Command to submit the data (POST, preferred!):"
-         print "    - %s" % self.cmdstring
-         print "\n    Command to submit via GET (copy to browser, for testing!):"
-         print "    - %s" % self.geturl
-         print "" # just a spacer
+         print("\n  * You have choosen the dryrun option.")
+         print("    These are the commands which could be executed")
+         print("    to submit the data via autosubmit.")
+         print("\n    Command to submit the data (POST, preferred!):")
+         print("    - %s" % self.cmdstring)
+         print("\n    Command to submit via GET (copy to browser, for testing!):")
+         print("    - %s" % self.geturl)
+         print("") # just a spacer
 
 
 # -------------------------------------------------------------------
@@ -203,20 +203,20 @@ if __name__ == "__main__":
       logcontent = "".join( logcontent )
       logcontent = re.sub("<.*?>", " ", logcontent)
       if not options.silent:
-         print " -------------------------logfile content------------------------- "
-         print "                 logfile: %s" % data.logfile
-         print logcontent
-         print " -------------------------logfile content------------------------- "
+         print(" -------------------------logfile content------------------------- ")
+         print("                 logfile: %s" % data.logfile)
+         print(logcontent)
+         print(" -------------------------logfile content------------------------- ")
 
 
       # - no errors reported
-      print ""
+      print("")
       if sub.returncode == 0:
-         print "[+] Wget return code was ok (equal to 0)" 
+         print("[+] Wget return code was ok (equal to 0)") 
       else:
-         print "[!] Wget exit code == %d" % sub.returncode
-         print "    Everything != 0 indicates a problem. There is something wrong!" 
-         print "    : Exit python with return code %d as well:" % sub.returncode
+         print("[!] Wget exit code == %d" % sub.returncode)
+         print("    Everything != 0 indicates a problem. There is something wrong!") 
+         print("    : Exit python with return code %d as well:" % sub.returncode)
          sys.exit(sub.returncode)
 
       # - Evaluating the logcontent and see if we got
@@ -227,9 +227,9 @@ if __name__ == "__main__":
          code  = re.search(r"[0-9]{1,}",match)
          code  = int(match[code.start():code.end()])
          if type(code) == type(int()) and code != 0:
-            print "\n[!] Wetterturnier server-side script returned exit code %d" % code
-            print "    Everything != 0 is an error. Check the logfile."
-            print "    : Exit python with return codde %d as well:" % code
+            print("\n[!] Wetterturnier server-side script returned exit code %d" % code)
+            print("    Everything != 0 is an error. Check the logfile.")
+            print("    : Exit python with return codde %d as well:" % code)
             sys.exit(code)
 
 
