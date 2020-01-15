@@ -58,7 +58,7 @@ if __name__ == '__main__':
    else:
       par = config['input_param'].split(",")
 
-   mids = {1:2010, 2:2010, 3:2011, 4:2012, 5:2013}
+   mids = {1:2010, 2:2010, 3:2011, 4:2012, 5:2013, 6:0, 7:0, 8:0, 9:0, 10:0, 11:0, 12:0}
 
    #verbose switch for debugging
    if config["input_verbose"]:
@@ -72,8 +72,10 @@ if __name__ == '__main__':
 
    #calculate userstats only
    for city in cities:
+      print(city)
       print("city = " + city["hash"])
-      midyear = mids[city['ID']]
+      midyear = mids[city["ID"]]
+      if not midyear: continue
       print("midyear = " + str(midyear) + "\n")
       if ymax == -1:
          sql = "SELECT max FROM %swetterturnier_citystats WHERE cityID = %d"

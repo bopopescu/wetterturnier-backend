@@ -112,9 +112,8 @@ if __name__ == '__main__':
       file_dates = []
       for file in moses_files:
          mtch = re.match( ".*moses([0-9]{6})\.\wpw$", file )
-	 if not mtch is None:
-	    file_dates.append( dt.datetime.strptime( mtch.group(1), "%y%m%d").date() )
-
+         if not mtch is None:
+            file_dates.append( dt.datetime.strptime( mtch.group(1), "%y%m%d").date() )
       # Newest moses file
       newest      = max( file_dates )
       newest_file = "{0:s}/moses{1:s}.{2:1s}pw".format(
@@ -173,7 +172,7 @@ if __name__ == '__main__':
          if not moses_file: continue
    
          print('  * Found newest moses file %s' % moses_file)
-         mfid = open(moses_file, 'r')
+         mfid = open(moses_file, encoding="iso-8859-1", errors='ignore')
          moses_data = iter(mfid.read().split('\n'))
          moses = {}
          for param in params: moses[param] = {}
@@ -182,6 +181,7 @@ if __name__ == '__main__':
                param=line.strip()
             elif len(line.split()) == 2:
                user = line.split()[1]
+               print(user)
                if user == "Persistenz": user = "Donnerstag"
                moses[param][user] = line.split()[0]
             else: continue

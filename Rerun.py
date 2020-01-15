@@ -30,8 +30,7 @@ if __name__ == '__main__':
    """
 
    import sys, os
-   from pywetterturnier import utils
-   from pywetterturnier import database
+   from pywetterturnier import utils, database
    import numpy as np
 
    # - Store input arguments - need them later
@@ -55,7 +54,7 @@ if __name__ == '__main__':
                "WHERE done IS NULL GROUP BY tdate,cityID;")
    rerun = cur.fetchall()
 
-   if len(rerun) == 0:
+   if not rerun:
       print("   There are no rerun requests, stop here."); sys.exit(0)
    
    # - Compute the Points for all the dudes first
@@ -112,4 +111,3 @@ if __name__ == '__main__':
 
    db.commit()
    db.close()
-

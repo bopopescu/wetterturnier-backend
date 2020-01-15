@@ -146,8 +146,7 @@ def inputcheck(what):
    # - If alldates is True and additionally
    #   a tdate is set: stop.
    if inputs['input_alldates'] and not inputs['input_tdate'] == None:
-      from . import utils
-      utils.exit('Input -a/--alldates and -t/--tdate cannot be combined!')
+      exit('Input -a/--alldates and -t/--tdate cannot be combined!')
 
 
    return inputs
@@ -165,7 +164,9 @@ def usage(what=None):
    .. todo:: A bug! Change iputcheck, add propper usage.
    """
 
-   import utils, sys, getobs, database
+   import sys
+   from pywetterturnier import getobs, database
+
    config = readconfig('config.conf')
    db     = database.database(config)                
    cities = db.get_cities()                             
@@ -210,7 +211,7 @@ def usage(what=None):
                      please do not use.
       """ % (what, IDs, names, hashes))
 
-   utils.exit('This is/was the usage (what: %s).' % what)
+   exit('This is/was the usage (what: %s).' % what)
 
 
 # -------------------------------------------------------------------
@@ -234,10 +235,9 @@ def readconfig(file='config.conf',inputs=None,conversion_table=None):
    """
 
    import sys, os
-   from . import utils
 
    if not os.path.isfile(file):
-      utils.exit('Cannot read file %s. Not readable or not existing' % file)
+      exit('Cannot read file %s. Not readable or not existing' % file)
 
    # - Import ConfigParser
    from configparser import ConfigParser
@@ -247,11 +247,11 @@ def readconfig(file='config.conf',inputs=None,conversion_table=None):
    # - Checks if directory exists.
    def check_directory( name ):
       if not os.path.isdir( name ):
-         utils.exit('Directory %s does not exist as requried by config file.' % name)
+         exit('Directory %s does not exist as requried by config file.' % name)
    # - Checks if file exists.
    def check_file( name ):
       if not os.path.isfile( name ):
-         utils.exit('File %s does not exist as requried by config file.' % name)
+         exit('File %s does not exist as requried by config file.' % name)
 
    # ----------------------------------------------------------------
    # - Reading mysql config
@@ -266,7 +266,7 @@ def readconfig(file='config.conf',inputs=None,conversion_table=None):
 
       config['mysql_obstable']   = CNF.get('database','mysql_obstable')
    except:
-      utils.exit('Problems reading the database config from the config file %s' % file)
+      exit('Problems reading the database config from the config file %s' % file)
 
    # ----------------------------------------------------------------
    # - Reading migration flags
@@ -303,7 +303,7 @@ def readconfig(file='config.conf',inputs=None,conversion_table=None):
       config['judging_operational'] = CNF.get('judging','operational')
       config['judging_test']        = CNF.get('judging','test')
    except:
-      utils.exit('Problems reading necessary judging config!') 
+      exit('Problems reading necessary judging config!') 
 
    # ----------------------------------------------------------------
    # - Some configs where the data are.
@@ -311,7 +311,7 @@ def readconfig(file='config.conf',inputs=None,conversion_table=None):
    try:
       config['data_moses']       = CNF.get('data','moses')
    except:
-      utils.exit('Problems rading all required data infos from config file')
+      exit('Problems rading all required data infos from config file')
    if not os.path.isdir( config['data_moses'] ):
       print("[WARNING] Could not find directory %s necessary for ComputeMoses" % config['data_moses']) 
       print("          ComputeMoes will crash!")
@@ -323,7 +323,7 @@ def readconfig(file='config.conf',inputs=None,conversion_table=None):
          print("          does not exist, ignore!")
          config['data_moses_out'] = None
    except:
-      utils.exit('No [data] modes_out directory set, will not copy files to webserver.')
+      exit('No [data] modes_out directory set, will not copy files to webserver.')
       config['data_moses_out']   = None
 
    # ----------------------------------------------------------------
@@ -332,7 +332,7 @@ def readconfig(file='config.conf',inputs=None,conversion_table=None):
    try:
       config['rawdir']           = CNF.get('system','rawdir')
    except:
-      utils.exit('Problems rading all required system infos from config file')
+      exit('Problems rading all required system infos from config file')
 
    # ----------------------------------------------------------------
    # - Reading all stations
@@ -348,7 +348,7 @@ def readconfig(file='config.conf',inputs=None,conversion_table=None):
       for k in list(inputs.keys()):
          # - Duplicated?
          if k in list(config.keys()):
-            utils.exit("inputs dict contains keys which are generated in this " + \
+            exit("inputs dict contains keys which are generated in this " + \
                      "method as well. Duplication! Exit. Key is: %s" % k)
          # - Else append
          if inputs[k] == 'None':
@@ -585,7 +585,6 @@ def nicename( string, conversion_table = None ):
 
    import unicodedata
    import re
-   from . import utils
 
    # Check whether conversion table is set. If: check if
    # User is in the conversion table keys. If so, rename
@@ -624,7 +623,7 @@ def nicename( string, conversion_table = None ):
    # - This is only for the Grossmeister
    nicename = nicename.replace('\m','ss')
    if "\\" in nicename:
-       utils.exit('nicename is with special ' + nicename)
+       exit('nicename is with special ' + nicename)
 
    return nicename
 

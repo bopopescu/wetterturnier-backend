@@ -30,8 +30,7 @@ if __name__ == '__main__':
    """
 
    import sys, os
-   from pywetterturnier import utils
-   from pywetterturnier import database
+   from pywetterturnier import utils, database
    import numpy as np
 
    # - Store input arguments - need them later
@@ -79,7 +78,7 @@ if __name__ == '__main__':
       else:
          scripts = ['ComputePetrus.py',
                     'ComputeMeanBets.py',
-                    'ComputePersistenzen.py',
+                    #'ComputePersistenzen.py',
                     'ComputePoints.py',
                     'ComputeSleepy.py']
    else:
@@ -106,7 +105,3 @@ if __name__ == '__main__':
       if not p1.returncode == 0:
          for line in err: print('%s\n' % line)
          utils.exit('ERROR WHILE RUNNING %s AS SUBPROCESS FOR DATE %d' % (script,config['input_tdate']))
-
-
-
-
