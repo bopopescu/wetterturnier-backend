@@ -32,16 +32,18 @@ setup(name='pywetterturnier',     # This is the package name
       classifiers=[
         'Development Status :: 4 - Beta',
         'GNU Lesser General Public License v3 or later (LGPLv3+)',
-        'Programming Language :: Python :: 2.7',
+        'Programming Language :: Python :: 3.8',
       ],
       keywords='wetterturnier wetter tippspiel',
       url='https://bitbucket.org/retos/prognose2-www-repository',
-      author='Reto Stauffer',
-      author_email='reto.stauffer@uibk.ac.at',
+      author='Juri Hubrig',
+      author_email='juri.hubrig@fu-berlin.de',
       license='GPL-3',
       packages=['pywetterturnier'],
       install_requires=[
-          'numpy',
+          'numpy',        # everyone needs it!
+          'matplotlib',   # plotting nice graphs
+          'scipy',        # curve fitting
           #'MySQL-python', # MySQL connection
           #MySQL-python not supported anymore in python3!
           'mysqlclient',  # new client version 1.4.4 since 1.4.5 didn't work
