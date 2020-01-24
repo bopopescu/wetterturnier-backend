@@ -994,10 +994,13 @@ class getobs( object ):
 
       print("    Observed w1 is ",w1, end=' ')
 
-      # If max(wX) > w1: use max(wX) value.
-      if np.max(ww_now   > w1): w1 = int(np.max(ww_now  ))
-      if np.max(ww_after > w1): w1 = int(np.max(ww_after))
-      print(" considering [ww] as well yields ",w1)
+      # skip if values are missing
+      if (type(ww_now) and type(ww_after) and type(w1) == np.array):
+
+         # If max(wX) > w1: use max(wX) value.   
+         if np.max(ww_now   > w1): w1 = int(np.max(ww_now  ))
+         if np.max(ww_after > w1): w1 = int(np.max(ww_after))
+         print(" considering [ww] as well yields ",w1)
 
       # - Return value  
       return None if w1 is None else float(w1)*10.

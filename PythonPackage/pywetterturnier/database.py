@@ -77,16 +77,31 @@ class database(object):
          bgn = dt.fromtimestamp(tdate).strftime(fmt)
          end = dt.fromtimestamp(tdate+1).strftime(fmt)
 
-         sql = []
-         sql.append("SELECT gu.userID")
-         sql.append("FROM {0:s}wetterturnier_groupusers AS gu".format(self.prefix))                                
-         sql.append("LEFT OUTER JOIN wp_wetterturnier_betstat AS bet")
-         sql.append("ON gu.userID=bet.userID")
-         sql.append("where groupID = {0:d} AND tdate = {1:d}".format(groupID,tdate))
-         sql.append("AND bet.cityID = {0:d}".format(cityID))
-         sql.append("AND (gu.until IS NULL OR (gu.since > '{0:s}' AND gu.until < '{1:s}'))".format(bgn,end))
-         sql.append("AND bet.submitted IS NOT NULL")
-         cur.execute( "\n".join(sql) )
+         #TODO should be safe from SQL injection
+         #problem is: console sometimes prints \n or \ which causes SQL injection save variant below to fail
+         sql = f"""
+            SELECT
+               gu.userID
+            FROM
+               {self.prefix}wetterturnier_groupusers AS gu
+            LEFT OUTER JOIN
+               {self.prefix}wetterturnier_betstat AS bet
+            ON
+               gu.userID=bet.userID
+            WHERE
+               groupID = {groupID} AND tdate = {tdate}
+            AND
+               bet.cityID = {cityID}
+            AND
+               (gu.until IS NULL OR (gu.since > '{bgn}' AND gu.until < '{end}'))
+            AND
+               bet.submitted IS NOT NULL
+         """
+         var = 2 * [ self.prefix ] + [ groupID, tdate, cityID, bgn, end ]
+         #print( sql.format(**{"self.prefix":self.prefix, "tdate":tdate, "groupID":groupID, "cityID":cityID, "bgn":bgn, "end":end }) )
+         #print( sql % tuple(var) ) 
+         #cur.execute( sql, {"self.prefix":self.prefix, "groupID":groupID, "cityID":cityID, "bgn":bgn, "end":end } )
+         cur.execute( sql )
 
       return [int( i[0] ) for i in cur.fetchall()]
 
@@ -496,8 +511,8 @@ class database(object):
       sql = "SELECT ID FROM {0:s}{1:s} WHERE name = {2:s} OR hash = {2:s}".format(self.config['mysql_prefix'],"wetterturnier_cities",city)
       cur = self.cursor(); cur.execute(sql)
       res = cur.fetchone()
-      if len(res) == 0: return False
-      return str(res[0], both is accepted)
+      if not res: return False
+      else: return int(res[0])
    
    # -------------------------------------------------------------------
    # - Returns all bets for a given tdate and
@@ -934,10 +949,8 @@ class database(object):
       if sort: sql += " ORDER BY sort"
       cur.execute( sql )
       data = cur.fetchall()
-      if not data:
-         return False
-      else:
-         return [i[0] for i in data]
+
+      return [i[0] for i in data]
 
 
    # -------------------------------------------------------------------
@@ -1054,10 +1067,8 @@ class database(object):
       cur = self.db.cursor()
       cur.execute('SELECT ID FROM %susers' % (self.prefix))
       data = cur.fetchall()
-      if not data:
-         return False
-      else:
-         return [int( i[0] ) for i in data]
+
+      return [int( i[0] ) for i in data]
 
 
    def get_groups(self, active=False):
@@ -1124,7 +1135,7 @@ class database(object):
          cur.execute(sql % (self.prefix, groupID))
          
          # - Make nice list
-         return [i[0] for i in cur.fetchall()]
+         return [int(i[0]) for i in cur.fetchall()]
 
    # -------------------------------------------------------------------
    # - Create a groupuser (add user to group as a member)
