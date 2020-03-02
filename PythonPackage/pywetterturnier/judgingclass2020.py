@@ -223,14 +223,14 @@ class judging(object):
       # - Observations min/max. If it is only one value min is
       #   equal to max.
       obs  = np.asarray(obs)
-      min  = np.min(obs)
-      max  = np.max(obs)
+      min_obs  = np.min(obs)
+      max_obs  = np.max(obs)
 
       # - Compute residuals
       resid = np.ndarray(len(data),dtype='float'); resid[:] = -999.
-      resid[ np.where(np.logical_and(data >= min, data <= max)) ] = 0.
-      resid[ np.where(data < min) ] = np.abs(min - data[ np.where(data < min) ])
-      resid[ np.where(data > max) ] = np.abs(max - data[ np.where(data > max) ])
+		resid[ np.where(np.logical_and(data >= min_obs, data <= max_obs)) ] = 0.
+      resid[ np.where(data < min_obs) ] = np.abs(min_obs - data[ np.where(data < min_obs) ])
+		resid[ np.where(data > max_obs) ] = np.abs(max_obs - data[ np.where(data > max_obs) ])
 
       return resid
 
@@ -297,55 +297,6 @@ class judging(object):
 
 
    # ----------------------------------------------------------------
-   # - Compute N (cloud cover) points 
-   # ----------------------------------------------------------------
-   def __points_N__(self,obs,data,special):
-      """Rule function to compute points for clouod cover.
-
-      Args:
-        obs (): Observations.
-        data (): Forecasted values.
-        special (): Special observations for additional rules.
-      
-      Returns:
-         Returns the corresponding points.
-      """
-
-      if not self.quiet:
-         print('    - Called N point computation method')
-      data   = np.asarray(data)
-      resid  = self.__residuals__(obs,data)
-
-      # - Full points
-      points = np.ndarray(len(data),dtype='float'); points[:] = 6.
-      # - For a difference of 1-3 (10 - 30 in difference units)
-      #   deduction of 1 per difference unit.
-      idx = np.where(np.logical_and(resid > 0, resid < 30))
-      points[idx] = points[idx] - resid[idx]/10.
-      #   Minus 4 points if residual is 3 (30) 
-      idx = np.where(resid == 30)
-      points[idx] = points[idx] - 4. 
-      #   Minus 6 points if residual is 4 (40) 
-      idx = np.where(resid >= 40)
-      points[idx] = points[idx] - 6. 
-      # - Special: if observation was 0 or 8 and the 
-      #   residual is not equal to 0: subtract one
-      #   more point.
-      obs    = np.asarray(obs); min = np.min(obs); max = np.max(obs)
-      if min == 80. or max == 0.:
-         idx = np.where(resid > 0)
-         points[idx] = points[idx] - 1.
-
-      # - Points cannot be negative
-      points = np.maximum( points, 0)
-
-      # - Show data (development stuff)
-      #for i in range(len(data)):
-      #   print '%2d|%2d:  %2d %2d %6.2f' % (min/10., max/10., data[i]/10., resid[i]/10., points[i])
-      return points
-
-
-   # ----------------------------------------------------------------
    # - Compute Sd (sunshine duration) points 
    # ----------------------------------------------------------------
    def __points_Sd__(self,obs,data,special):
@@ -405,7 +356,7 @@ class judging(object):
         obs (): Observations.
         data (): Forecasted values.
         special (): Special observations for additional rules.
-      
+ 
       Returns:
          Returns the corresponding points.
       """
@@ -427,7 +378,7 @@ class judging(object):
          if max - min > 1800.:
             tmp = max
             max = min + 3600.
-            min = tmp 
+            min = tmp
       # - If min or max is none, min and max are equal
       if not min == None and max == None: max = min
       if min == None and not max == None: min = max
@@ -563,7 +514,7 @@ class judging(object):
         obs (): Observations.
         data (): Forecasted values.
         special (): Special observations for additional rules.
-      
+
       Returns:
          Returns the corresponding points.
       """
@@ -585,7 +536,7 @@ class judging(object):
       return points
 
    # ----------------------------------------------------------------
-   # - Compute fx (wind gusts) points 
+   # - Compute fx (wind gusts) points NEW VERSION
    # ----------------------------------------------------------------
    def __points_fx__(self,obs,data,special):
       """Rule function to compute points for gust speed.
@@ -594,138 +545,61 @@ class judging(object):
         obs (): Observations.
         data (): Forecasted values.
         special (): Special observations for additional rules.
-      
+
       Returns:
          Returns the corresponding points.
       """
 
       # - Getting min and max from the obs
       data   = np.asarray(data)
-      obs    = np.asarray(obs);
-      min = np.min(obs)
-      max = np.max(obs)
-
-      # - To avoid wrong inputs: knots below 25 (250.)
-      #   are set to 0!
-      data[np.where( data < 250. )] = 0
+      obs    = np.asarray(obs)
+      min_obs = np.min(obs)
+      max_obs = np.max(obs)
 
       if not self.quiet:
          print('    - Called fx point computation method')
-      data   = np.asarray(data)
       resid  = self.__residuals__(obs,data)
 
       # - Full points
       maxpoints = 4.
-      points = np.ndarray(len(data),dtype='float'); points[:] = maxpoints
-      # - Default mode is minus 0.25 Points 
-      #   for the first 0-15 knots difference, afterwards
-      #   minus 0.5 points for all above 15 knots difference. 
+      points = np.ndarray(len(data), dtype='float'); points[:] = maxpoints
+      # - Default mode is minus 0.5 Points 
+      #   for the first 0-10 m/s difference, afterwards
+      #   minus 1.0 points for all above 10 m/s difference. 
       def normal_penalty( resid ):
-         return np.minimum( resid, 150. )*0.025 + np.maximum( resid-150., 0)*0.05
+         return np.minimum( resid, 100. )*0.05 + np.maximum( resid-100., 0)*0.1
 
-      # - Non-special penalty is if fx >= 250 and forecast >= 250 (250=25kt)
-      if max >= 250.:
-         idx = np.where( data >= 250. )
-         points[idx] = points[idx] - normal_penalty( resid[idx] )
-
-      # - For these where forecast (data) was 0. but obs was >= 250:
-      #   Special rule. First: -3 points and then normal penalty
-      #   for residuals - 250.
-      idx = np.where( np.logical_and( data == 0, min >= 250. ) )
-      points[idx] = maxpoints - 3 - normal_penalty( np.maximum(resid[idx]-250.,0) )
-      # - For these where forecast (data) was >= 250. but obs was == 0:
-      #   Special rule. First: -3 points and then normal penalty
-      #   for residuals - 250.
-      idx = np.where( np.logical_and( data >= 250, max == 0. ) )
-      points[idx] = maxpoints - 3 - normal_penalty( np.maximum(resid[idx]-250.,0) )
-
-      # - Now correcting:
-      #   For all resid == 0: set points to maxpoints.
-      idx = np.where( resid == 0. )
-      points[idx] = maxpoints
+      points = points[idx] - normal_penalty( resid )
 
       # - Show data (development stuff)
       #for i in range(len(data)):
       #   print '%5d %5d | %5d %5d %6.2f' % (min, max, data[i], resid[i], points[i])
       return points
 
-   # ----------------------------------------------------------------
-   # - Compute Wv (maximum temperature) points
-   #   Compute Wv (minimum temperature) points
-   #   - They are using the same method (forwarding)
-   # ----------------------------------------------------------------
-   def __points_Wv__(self,obs,data,special):
-      """Function to compute points for Wv (weather type noon) 
-      This is only an alias to __points_WvWn__ as they all use
-      the same rule.
-      """
-      return self.__points_WvWn__(obs,data,special)
-   def __points_Wn__(self,obs,data,special):
-      """Function to compute points for Wn (weather type afternoon)
-      This is only an alias to __points_WvWn__ as they all use
-      the same rule.
-      """
-      return self.__points_WvWn__(obs,data,special)
-   # - Here Wn and WvWn are getting computed
-   def __points_WvWn__(self,obs,data,special):
-      """Rule function to compute points for weather types. 
 
-      Args:
-        obs (): Observations.
-        data (): Forecasted values.
-        special (): Special observations for additional rules.
-      
-      Returns:
-         Returns the corresponding points.
-      """
+   __points_pRRv__ = __points_pRRn__ = __points_pTS__ = __points_pFG__ = \
+			lambda self,obs,data,special : __points_prob__(self,obs,data,special)
 
-      if not self.quiet:
-         print('    - Called WvWn point computation method')
-      data   = np.asarray(data)
+	def __points_prob__(self,obs,data,special):
+		"""(pseudo) probabilistic forecast of precipitation or thunderstorm/fog
+		   in spring and summer: TS - thunderstorm 6/6
+		   in autumn and winter: FG - fog          6/6
+         always pRRv & pRRn -> propability for precipitation
+			RR: if one station has obs and the other not -> smaller difference for deduction
+		"""
+		data   = np.asarray(data) #probabilistic forecasts: between 0 and 1 => int :: [0-10]
+		obs    = np.asarray(obs)  #trichotom obs 0, 0.5 or 1 => int :: [0,5,10]
 
-      # Deduction matrix list.
-      # "New" observations which will be added in 2019:
-      # 1 - non-significant or special weather (ww 10-19), mostly haze (10)
-      # 2 - ending weather observed on the very first synop of Wv/Wn
-      # 3 - sandstorm, abgesetzte Niederschläge etc. (very rare events)
+      resid  = self.__residuals__(obs,data/10)
 
-      # If something is wrong
-      # with my judgment class this leads to -89 points. If this
-      # occures we have to check this stuff.
-      #        bet was  0   1   2   3   4   5   6   7   8   9
-      point_matrix = [[ 0., 3., 5., 5., 5., 7., 7., 7., 6., 6.,], # observed 0
-                      [ 5., 0., 6., 4., 4., 6., 6., 7., 6., 6.,], # observed 1
-                      [ 7., 6., 0., 2., 4., 5., 5., 6., 5., 5.,], # observed 2
-                      [ 7., 5., 7., 0., 3., 5., 7., 4., 4., 9.,], # observed 3
-                      [ 8., 7., 5., 2., 0., 3., 5., 5., 9., 9.,], # observed 4
-                      [10., 9., 5., 6., 3., 0., 2., 4., 6., 8.,], # observed 5
-                      [10., 9., 6., 7., 6., 1., 0., 3., 3., 4.,], # observed 6
-                      [10., 9., 7., 8., 6., 4., 4., 0., 3., 4.,], # observed 7
-                      [ 7., 7., 8., 9., 8., 5., 2., 2., 0., 2.,], # observed 8
-                      [ 8., 9., 9.,10., 9., 7., 5., 6., 3., 0.,]] # observed 9
+		maxpoints = 100. #actually 10 #actually 10!!
+		points = np.ndarray(len(data), dtype='float')
 
-      # - Start with -999 Points (should never stay negative - else we do
-      #   have a but.
-      points = np.ndarray(len(data),dtype='float'); points[:] = -999
+      #deduct MSE score (kind of brier score)
+		points = (maxpoints - resid)**2 / 10
 
-      # - Compute points for all observations and always take
-      #   the maximum of these.
-      for o in obs:
-         for i in range(len(data)):
-            #            maxpoints -              observed      bet value
-            tmp       =     10    - point_matrix[int(o/10)][int(data[i]/10)]
-            # Minimum points: 0!
-            if tmp < 0:
-               points[i] = 0.
-            if tmp > points[i]:
-               points[i] = tmp
+		return 0
 
-      # - Show data (development stuff)
-      #for i in range(len(data)):
-      #   omin = np.min( np.asarray(obs) )
-      #   omax = np.max( np.asarray(obs) )
-      #   print 'obs: %5d %5d bet: %5d %6.2f' % (omin, omax, data[i], points[i])
-      return points
 
    # ----------------------------------------------------------------
    # - Compute PPP (station pressure) points 
