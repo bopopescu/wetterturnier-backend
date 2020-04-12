@@ -22,7 +22,7 @@ if __name__ == '__main__':
    import numpy as np
    # - Wetterturnier specific modules
    from pywetterturnier import utils, database
-   
+
    # - Evaluating input arguments
    inputs = utils.inputcheck('ComputeRanksOnly')
    # - Read configuration file
@@ -46,7 +46,7 @@ if __name__ == '__main__':
       config['input_user'] = db.get_user_id( config['input_user'] )
       if not config['input_user']:
          utils.exit('SORRY could not convert your input -u/--user to corresponding userID. Check name.')
-   
+
    # - Loading all parameters
    params = db.get_parameter_names(False)
 
@@ -90,24 +90,33 @@ if __name__ == '__main__':
 
          # Take unique points and reverse-sort them
          points = np.unique(points)
-         points.sort(); points = points[::-1]
+         n_points = len(points)
+         points.sort()
+         points = points[::-1]
 
-         # Apply rank
-         for rec in data:
-            rank = np.where( points == rec[1] )[0]
-            if not len(rank) == 1 :
-               print(points)
-               print(rec)
-               print(rank)
-               sys.exit('cannot apply rank')
-            rec[2] = rank[0] + 1
+         data = np.array(data)
+         for i in range(n_points):
+            #print( data[:,1] )
+            users = np.where( data[:,1] == points[i] )[0]
+            #print(users)
+            for j in users:
+               data[j][2] = i+1
+               print(db.get_username_by_id(data[j][0]), i+1, points[i])
+               """
+               # Apply rank
+               for rec in data:
+                  rank = np.where( points == rec[1] )[0]
+                  print(points)
+                  print(rec)
+                  print(rank)
+                  rec[2] = rank[0] + 1
+               """
+               sql = "UPDATE wp_wetterturnier_betstat SET rank = %d" % data[j][2] + \
+                     " WHERE cityID = %d" % city['ID'] + \
+                     " AND tdate = %d AND userID IN%s" % (tdate, db.sql_tuple( data[j][0] ))
+               cur.execute( sql )
 
-            sql = "UPDATE wp_wetterturnier_betstat SET rank = %d" % rec[2] + \
-                  " WHERE cityID = %d" % city['ID'] + \
-                  " AND tdate = %d AND userID = %d" % (tdate,rec[0])
-            cur.execute( sql )
-
-         db.commit()
+            db.commit()
 
 
    db.commit()

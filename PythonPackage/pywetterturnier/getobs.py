@@ -531,14 +531,15 @@ class getobs( object ):
          sql = "SELECT hoehe, hbaro FROM obs.stations WHERE statnr = %d"
          cur.execute( sql % station.wmo )
          data = cur.fetchall()
-         if len(data[0]) > 0:
+         if not data: h = 0
+         elif len(data[0]) > 0:
             h = data[0][0]
          else:
-            h = data[0][0]
+            h = data[0][1]
          p = self.load_obs( station.wmo, 12, 'psta' )
          T = self.load_obs( station.wmo, 12, 't' )
 
-         #calculate reduced MSL pressure via international barometric height formula
+         #calculate reduced MSL pressure via international barometric height formula if no reduced pressure is given
          if not (p == None or T == None or h == None):
             T /= 10.; p /= 10.
             T += 273.15
@@ -823,7 +824,7 @@ class getobs( object ):
       elif not check:
           return None
       else:
-          return  0 if Wv is None else Wv
+          return  0 if (Wv is None) else Wv
 
    # ----------------------------------------------------------------
    # - Prepare Wn
@@ -850,8 +851,8 @@ class getobs( object ):
 
       # Note: difference between special_now and special_after is that special_after does
       # NOT include 1200 UTC (used for Nachwetter), special_now does.
-      special_now   = self.special_obs_object("ww today 12:00 to today 18:00",self._date_)
-      special_after = self.special_obs_object("ww today 13:00 to today 18:00",self._date_)
+      special_now   = self.special_obs_object("ww today 12:00 to today 18:00", self._date_)
+      special_after = self.special_obs_object("ww today 13:00 to today 18:00", self._date_)
 
       w1         = self.load_obs( station.wmo, 18, 'w1' )
       ww_now     = self.load_special_obs( station.wmo, special_now   )
@@ -859,7 +860,7 @@ class getobs( object ):
 
       Wn = self._get_proper_WvWn_( w1, ww_now, ww_after )
 
-      # If Wv is None but the 18 UTC record is here we assume a 0 (no
+      # If Wn is None but the 18 UTC record is here we assume a 0 (no
       # significant weather). Until the 18 UTC record is not here we
       # return a None (no observations available):
       check = self.check_record( station.wmo, 18 )
@@ -871,7 +872,7 @@ class getobs( object ):
       elif not check:
           return None
       else:
-          return  0 if Wn is None else Wn
+          return  0 if (Wn is None) else Wn
 
    # ----------------------------------------------------------------
    # - Prepare Wv
@@ -914,7 +915,7 @@ class getobs( object ):
       elif not check:
           return None
       else:
-          return  0 if Wall is None else Wall
+          return  0 if (Wall is None) else Wall
 
 
    # ----------------------------------------------------------------
@@ -959,10 +960,10 @@ class getobs( object ):
       ww_after = [] if ww_after is None else ww_after 
 
       # For ww_now consider all except 20-29
-      tmp = ww_now; ww_now = []
+      tmp = np.copy(ww_now); ww_now = []
       for x in tmp:
           if not x in range(20,30) and not x is None: ww_now.append(x)
-      tmp = ww_after; ww_after = []
+      tmp = np.copy(ww_after); ww_after = []
       # For ww_after (Nachwetter; including leading hour) take only 20-29!
       for x in tmp:
           if     x in range(20,30): ww_after.append(x)
@@ -976,8 +977,8 @@ class getobs( object ):
       # observed w1/ww flags into the new ones.
       if self.wmoww:
           w1       =   self.wmoww.convert( "w1", w1 )
-          ww_now   = [ self.wmoww.convert( "ww", x ) for x in ww_now   ]
-          ww_after = [ self.wmoww.convert( "ww", x ) for x in ww_after ]
+          ww_now   = list(filter(None, [ self.wmoww.convert( "ww", x ) for x in ww_now   ] ))
+          ww_after = list(filter(None, [ self.wmoww.convert( "ww", x ) for x in ww_after ] ))
           #print "      [Converted]   ",w1, ww_now, ww_after
 
       # If list return is requested: do so.
@@ -985,22 +986,17 @@ class getobs( object ):
           w1 = [] if w1 is None else [w1]
           return w1 + ww_now + ww_after
 
-      # Convert to numpy array for further analysis
-      ww_now   = np.asarray( ww_now   )
-      ww_after = np.asarray( ww_after )
+      w1 = 0 if not w1 else w1
 
-      ww_now   = None if len(ww_now) == 0 else ww_now
-      ww_after = None if len(ww_after) == 0 else ww_after
+      print("    Observed w1 is ", w1, end=' ')
 
-      print("    Observed w1 is ",w1, end=' ')
-
-      # skip if values are missing
-      if (type(ww_now) and type(ww_after) and type(w1) == np.array):
-
-         # If max(wX) > w1: use max(wX) value.   
-         if np.max(ww_now   > w1): w1 = int(np.max(ww_now  ))
-         if np.max(ww_after > w1): w1 = int(np.max(ww_after))
-         print(" considering [ww] as well yields ",w1)
+      # If max(wX) > w1: use max(wX) value
+      for ww in [ww_now, ww_after]:
+         if ww:
+            max_ww = np.max( ww )
+            if max_ww > w1:
+               w1 = int(max_ww)
+         print(" considering [ww] as well yields ", w1)
 
       # - Return value  
       return None if w1 is None else float(w1)*10.

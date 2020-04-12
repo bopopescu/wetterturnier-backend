@@ -40,7 +40,7 @@ class database(object):
    # ----------------------------------------------------------------
    # ----------------------------------------------------------------
    def __init__(self,config):
-      
+
       """The database class is handling the connection to the
       mysql database and different calls and stats.
       """
@@ -49,6 +49,17 @@ class database(object):
       self.db = self.__connect__()
 
       self.prefix = self.config['mysql_prefix']
+
+
+   def sql_tuple(self,IDs):
+      """Format a list of integers (IDs) to a tuple fitting the SQL IN(...) statement"""
+      if not hasattr(IDs, '__len__') and type(IDs) == int:
+         return "("+str(IDs)+")"
+      elif len(IDs) in [0,1]:
+         if len(IDs) == 0: IDs.append(0)
+         return str(tuple(IDs))[0:-2]+")"
+      else: return str(tuple(IDs))
+
 
    # ----------------------------------------------------------------
    # ----------------------------------------------------------------
@@ -565,7 +576,7 @@ class database(object):
       if nosleepy:
          deadID = self.get_user_id('Sleepy')
          sql += ' AND userID != %d ' % deadID
-      cur.execute( sql % (self.prefix, cityID, paramID, betdate, tdate) ) 
+      cur.execute( sql % (self.prefix, cityID, paramID, betdate, tdate) )
       #####cur.execute( sql % (self.prefix, cityID, paramID, betdate, tdate, 1) ) 
 
       data = cur.fetchall()

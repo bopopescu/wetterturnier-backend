@@ -22,7 +22,7 @@ class judging(object):
    """This is a judgingclass - a class used to compute the points
    a user gets on a specific weekend. Please note that it is possible
    that the rules change somewhen and that there is a second judgingclass.
-   
+
    The class contains public attributes tdate_min and tdate_max as a
    safety-instrument. As soon as you would like to compute points
    for a specific tournament which falls outside this limits the script
@@ -848,9 +848,9 @@ class judging(object):
          imin = np.maximum( data[i], 0 )
          #possible 0.0 bugfix needs to be tested:
          #if imin == imax == 0:
-	 #   slc = 0
+         #   slc = 0
          #else:
-	 #   slc = range(imin+1,imax+1)
+         #   slc = range(imin+1,imax+1)
          deduction[i] = deduction[i] + np.sum( full_penalty[imin:imax] )
 
       if MIN > 50.:
@@ -861,7 +861,7 @@ class judging(object):
       #   remove 3 more points.
       if MIN >= 0:
          idx = np.where( data < 0)
-         deduction[idx] =  deduction[idx] + 3 
+         deduction[idx] =  deduction[idx] + 3
       # - Same for case: max(obs) was < 0 (-3.0) but forecast was >=0
       if MAX < 0:
          idx = np.where( data >= 0)
@@ -878,16 +878,3 @@ class judging(object):
          print('%5d %5d | bet %5d | resid: %5d | %6.2f  (ded: %6.2f)' % (MIN, MAX, data[i], resid[i], points[i], deduction[i]))
 
       return points
-
-
-
-
-
-
-
-
-
-
-
-
-

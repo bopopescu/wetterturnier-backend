@@ -453,7 +453,11 @@ class wmowwConversion( object ):
         """
 
         if code is None:          return None
-        if not type(code) == int: return None
+        try: code = int(code)
+        except TypeError:
+           import sys
+           sys.exit("Type conversion failed!")
+        #if not type(code) == int: return None
 
         strcode = "{:d}".format(code)
         if section.lower() in ["past","w1","w2"]:
