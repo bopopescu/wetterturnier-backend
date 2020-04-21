@@ -95,29 +95,27 @@ if __name__ == '__main__':
          points = points[::-1]
 
          data = np.array(data)
+         rank = 1
+         hiddenrank = 0
+         hold = None
          for i in range(n_points):
-            #print( data[:,1] )
             users = np.where( data[:,1] == points[i] )[0]
-            #print(users)
             for j in users:
-               data[j][2] = i+1
-               print(db.get_username_by_id(data[j][0]), i+1, points[i])
-               """
-               # Apply rank
-               for rec in data:
-                  rank = np.where( points == rec[1] )[0]
-                  print(points)
-                  print(rec)
-                  print(rank)
-                  rec[2] = rank[0] + 1
-               """
-               sql = "UPDATE wp_wetterturnier_betstat SET rank = %d" % data[j][2] + \
+               # Always increase hidden rank
+               hiddenrank += 1
+               # If current value is lower than previous:
+               # set new hold, and set rank to hiddenrank.
+               if not hold or points[i] < hold:
+                  rank = np.copy(hiddenrank)
+                  hold = np.copy(points[i])
+               #set rank
+               print(db.get_username_by_id(data[j][0]), rank, points[i])
+               sql = "UPDATE wp_wetterturnier_betstat SET rank = %d" % rank + \
                      " WHERE cityID = %d" % city['ID'] + \
                      " AND tdate = %d AND userID IN%s" % (tdate, db.sql_tuple( data[j][0] ))
                cur.execute( sql )
 
             db.commit()
-
 
    db.commit()
    db.close()
